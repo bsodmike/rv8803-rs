@@ -111,7 +111,7 @@ impl<B, E> Rv8803<B>
 where
     B: Rv8803Bus<Error = E>,
 {
-    /// Create a new RV8803 from a [`i2c0::Rv8803Bus`](crate::i2c0::Rv8803Bus).
+    /// Create a new RV8803 from a [`i2c0::Bus`](crate::i2c0::Bus).
     pub fn new(bus: B) -> Result<Self, E> {
         Ok(Self { bus })
     }
