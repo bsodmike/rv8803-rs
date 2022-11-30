@@ -8,9 +8,17 @@ pub enum Address {
     Default = 0x32,
 }
 
-impl Into<u8> for Address {
-    fn into(self) -> u8 {
-        self::Address::Default as u8
+impl Address {
+    fn value(&self) -> u8 {
+        *self as u8
+    }
+}
+
+impl From<Address> for u8 {
+    fn from(value: Address) -> Self {
+        match value {
+            Address::Default => Address::Default.value(),
+        }
     }
 }
 
@@ -47,13 +55,12 @@ where
     fn read_register(&mut self, register: Register) -> Result<u8, Self::Error> {
         let mut data = [0];
         self.bus
-            .write_read(self.address as u8, &[register.address()], &mut data)?;
+            .write_read(self.address, &[register.address()], &mut data)?;
         Ok(u8::from_le_bytes(data))
     }
 
     fn write_register(&mut self, register: Register, byte: u8) -> Result<(), E> {
-        self.bus
-            .write(self.address as u8, &[register.address(), byte])?;
+        self.bus.write(self.address, &[register.address(), byte])?;
 
         Ok(())
     }
@@ -64,22 +71,20 @@ where
         dest: &mut [u8],
         _len: usize,
     ) -> Result<bool, E> {
-        self.bus.write_read(self.address as u8, &[addr], dest)?;
+        self.bus.write_read(self.address, &[addr], dest)?;
 
         Ok(true)
     }
 
-    fn write_register_by_addr(&mut self, reg_addr: u8, value: u8) -> Result<(), Self::Error> {
-        let byte = value as u8;
-        self.bus.write(self.address as u8, &[reg_addr, byte])?;
+    fn write_register_by_addr(&mut self, reg_addr: u8, byte: u8) -> Result<(), Self::Error> {
+        self.bus.write(self.address, &[reg_addr, byte])?;
 
         Ok(())
     }
 
     fn read_register_by_addr(&mut self, reg_addr: u8) -> Result<u8, Self::Error> {
         let mut data = [0];
-        self.bus
-            .write_read(self.address as u8, &[reg_addr], &mut data)?;
+        self.bus.write_read(self.address, &[reg_addr], &mut data)?;
         Ok(u8::from_le_bytes(data))
     }
 }

@@ -136,6 +136,7 @@ where
     // }
 
     /// Set time on the RV8803 module
+    #[allow(clippy::too_many_arguments)]
     pub fn set_time(
         &mut self,
         sec: u8,
@@ -172,12 +173,11 @@ where
 
     /// Fetch time from the RTC clock and store it in the buffer `dest`.
     pub fn update_time(&mut self, dest: &mut [u8]) -> Result<bool, E> {
-        if (self.bus.read_multiple_registers(
+        if !(self.bus.read_multiple_registers(
             Register::Hundredths.address(),
             dest,
             TIME_ARRAY_LENGTH,
-        )?) == false
-        {
+        )?) {
             warn!("update_time: attempt read - fail 1");
             return Ok(false); // Something went wrong
         }
@@ -188,12 +188,11 @@ where
 
             info!("update_time: if hundredths are at 99 or seconds are at 59, read again to make sure we didn't accidentally skip a second/minute / Hundreths: {} / Seconds: {}", bcd_to_dec(dest[0]),bcd_to_dec(dest[1]));
 
-            if (self.bus.read_multiple_registers(
+            if !(self.bus.read_multiple_registers(
                 Register::Hundredths.address(),
                 &mut temp_time,
                 TIME_ARRAY_LENGTH,
-            )?) == false
-            {
+            )?) {
                 warn!("update_time: attempt read - fail 2");
                 return Ok(false); // Something went wrong
             };
@@ -222,9 +221,7 @@ where
             }
         }
 
-        for i in 0..dest.len() {
-            dest[i] = buf[i].clone();
-        }
+        dest.copy_from_slice(&buf[..dest.len()]);
 
         Ok(true)
     }
