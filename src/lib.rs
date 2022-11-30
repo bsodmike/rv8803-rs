@@ -9,6 +9,7 @@
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
+use crate::i2c0::Bus;
 pub use embedded_hal;
 pub use embedded_hal_0_2;
 use log::{debug, info, warn};
@@ -19,17 +20,11 @@ extern crate alloc;
 /// RV8803 I2C bus implementation with embedded-hal version 0.2
 pub mod i2c0;
 
-/// RV8803 chip ID.
-pub const CHIP_ID: u8 = 0x60;
-
 /// All possible errors in this crate
 #[derive(Debug)]
 pub enum Rv8803Error<E> {
     /// I2C bus error
     I2c(E),
-
-    /// Invalid chip ID was read
-    InvalidChipId(u8),
 }
 
 /// Mapping of all the registers used to operate the RTC module
@@ -98,7 +93,7 @@ pub struct Rv8803<B> {
     bus: B,
 }
 
-impl<I2C, E> Rv8803<crate::i2c0::Rv8803Bus<I2C>>
+impl<I2C, E> Rv8803<Bus<I2C>>
 where
     I2C: embedded_hal_0_2::blocking::i2c::Write<Error = E>
         + embedded_hal_0_2::blocking::i2c::WriteRead<Error = E>,
@@ -106,7 +101,8 @@ where
     /// Creates a new `Rv8803` driver from a I2C peripheral, and an I2C
     /// device address.
     pub fn from_i2c0(i2c: I2C, address: crate::i2c0::Address) -> Result<Self, E> {
-        let bus = crate::i2c0::Rv8803Bus::new(i2c, address);
+        let bus = crate::i2c0::Bus::new(i2c, address);
+
         Self::new(bus)
     }
 }
@@ -119,21 +115,6 @@ where
     pub fn new(bus: B) -> Result<Self, E> {
         Ok(Self { bus })
     }
-
-    /// RV8803 chip ID.
-    ///
-    /// The return value is a constant, [`CHIP_ID`].
-    ///
-    /// This register is useful as a sanity check to ensure communications are
-    /// working with the RV8803.
-
-    // FIXME
-    // pub fn chip_id(&mut self) -> Result<u8, E> {
-    //     let mut buf: [u8; 1] = [0];
-    //     self.bus.read_regs(self::CHIP_ID, &mut buf)?;
-
-    //     Ok(buf[0])
-    // }
 
     /// Set time on the RV8803 module
     #[allow(clippy::too_many_arguments)]

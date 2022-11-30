@@ -9,7 +9,8 @@ pub enum Address {
 }
 
 impl Address {
-    fn value(&self) -> u8 {
+    /// Value of the address variant
+    pub fn value(&self) -> u8 {
         *self as u8
     }
 }
@@ -24,19 +25,18 @@ impl From<Address> for u8 {
 
 /// RV8803 bus.
 #[derive(Debug)]
-pub struct Rv8803Bus<I2C> {
+pub struct Bus<I2C> {
     address: u8,
     bus: I2C,
 }
 
-impl<I2C, E> Rv8803Bus<I2C>
+impl<I2C, E> Bus<I2C>
 where
     I2C: embedded_hal_0_2::blocking::i2c::Write<Error = E>
         + embedded_hal_0_2::blocking::i2c::WriteRead<Error = E>,
 {
     /// Creates a new `Rv8803Bus` from a I2C peripheral, and an I2C
     /// device address.
-    #[inline]
     pub fn new(bus: I2C, address: Address) -> Self {
         Self {
             bus,
@@ -45,7 +45,7 @@ where
     }
 }
 
-impl<I2C, E> crate::Rv8803Bus for Rv8803Bus<I2C>
+impl<I2C, E> crate::Rv8803Bus for Bus<I2C>
 where
     I2C: embedded_hal_0_2::blocking::i2c::Write<Error = E>
         + embedded_hal_0_2::blocking::i2c::WriteRead<Error = E>,
