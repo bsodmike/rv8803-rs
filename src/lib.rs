@@ -1,10 +1,6 @@
 //! RV8803 driver with support for I2C.
 #![no_std]
-#![cfg_attr(
-    feature = "async",
-    feature(async_fn_in_trait),
-    allow(incomplete_features)
-)]
+#![cfg_attr(feature = "async", allow(incomplete_features))]
 #![cfg_attr(docsrs, feature(doc_cfg), feature(doc_auto_cfg))]
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
@@ -111,7 +107,7 @@ impl<B, E> Rv8803<B>
 where
     B: Rv8803Bus<Error = E>,
 {
-    /// Create a new RV8803 from a [`i2c0::Bus`](crate::i2c0::Bus).
+    /// Create a new RV8803 from a [`i2c0::Bus`].
     pub fn new(bus: B) -> Result<Self, E> {
         Ok(Self { bus })
     }
