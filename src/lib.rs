@@ -12,7 +12,7 @@
 use crate::i2c0::Bus;
 pub use embedded_hal;
 pub use embedded_hal_0_2;
-use log::{debug, info, warn};
+use log::{debug, warn};
 
 #[cfg(feature = "alloc")]
 extern crate alloc;
@@ -167,7 +167,7 @@ where
         if bcd_to_dec(dest[0]) == 99 || bcd_to_dec(dest[1]) == 59 {
             let mut temp_time = [0_u8; TIME_ARRAY_LENGTH];
 
-            info!("update_time: if hundredths are at 99 or seconds are at 59, read again to make sure we didn't accidentally skip a second/minute / Hundreths: {} / Seconds: {}", bcd_to_dec(dest[0]),bcd_to_dec(dest[1]));
+            debug!("update_time: if hundredths are at 99 or seconds are at 59, read again to make sure we didn't accidentally skip a second/minute / Hundreths: {} / Seconds: {}", bcd_to_dec(dest[0]),bcd_to_dec(dest[1]));
 
             if !(self.bus.read_multiple_registers(
                 Register::Hundredths.address(),
@@ -180,7 +180,7 @@ where
 
             // If the reading for hundredths has rolled over, then our new data is correct, otherwise, we can leave the old data.
             if bcd_to_dec(dest[0]) > bcd_to_dec(temp_time[0]) {
-                info!("update_time: the reading for hundredths has rolled over, then our new data is correct. / Hundreths: {} / temp_time[0]: {}",
+                debug!("update_time: the reading for hundredths has rolled over, then our new data is correct. / Hundreths: {} / temp_time[0]: {}",
                 bcd_to_dec(dest[0]),
                 bcd_to_dec(temp_time[0]));
 
