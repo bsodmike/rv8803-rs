@@ -10,7 +10,6 @@
 #![warn(missing_docs)]
 
 use crate::i2c0::Bus;
-pub use embedded_hal;
 pub use embedded_hal_0_2;
 use log::{debug, info, warn};
 
@@ -93,27 +92,23 @@ pub struct Rv8803<B> {
     bus: B,
 }
 
-impl<I2C, E> Rv8803<Bus<I2C>>
+impl<'a, I2C, E> Rv8803<Bus<'a, I2C>>
 where
-    I2C: embedded_hal_0_2::blocking::i2c::Write<Error = E>
-        + embedded_hal_0_2::blocking::i2c::WriteRead<Error = E>,
+    I2C: embedded_hal_0_2::blocking::i2c::WriteRead<Error = E>
+        + embedded_hal_0_2::blocking::i2c::Write<Error = E>,
+    Bus<'a, I2C>: Rv8803Bus<Error = E>,
 {
+    /// Create a new RV8803 from a [`i2c0::Bus`](crate::i2c0::Bus).
+    pub fn new(bus: Bus<'a, I2C>) -> Result<Self, E> {
+        Ok(Self { bus })
+    }
+
     /// Creates a new `Rv8803` driver from a I2C peripheral, and an I2C
     /// device address.
     pub fn from_i2c0(i2c: I2C, address: crate::i2c0::Address) -> Result<Self, E> {
         let bus = crate::i2c0::Bus::new(i2c, address);
 
         Self::new(bus)
-    }
-}
-
-impl<B, E> Rv8803<B>
-where
-    B: Rv8803Bus<Error = E>,
-{
-    /// Create a new RV8803 from a [`i2c0::Bus`](crate::i2c0::Bus).
-    pub fn new(bus: B) -> Result<Self, E> {
-        Ok(Self { bus })
     }
 
     /// Set time on the RV8803 module

@@ -1,4 +1,5 @@
 use super::Register;
+use core::marker::PhantomData;
 
 /// I2C device address.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
@@ -25,15 +26,17 @@ impl From<Address> for u8 {
 
 /// RV8803 bus.
 #[derive(Debug)]
-pub struct Bus<I2C> {
+pub struct Bus<'a, I2C> {
     address: u8,
     bus: I2C,
+    _p: PhantomData<&'a I2C>,
 }
 
-impl<I2C, E> Bus<I2C>
+impl<'a, I2C, E> Bus<'a, I2C>
 where
-    I2C: embedded_hal_0_2::blocking::i2c::Write<Error = E>
-        + embedded_hal_0_2::blocking::i2c::WriteRead<Error = E>,
+    I2C: embedded_hal_0_2::blocking::i2c::WriteRead<Error = E>
+        + embedded_hal_0_2::blocking::i2c::Write<Error = E>,
+    Bus<'a, I2C>: crate::Rv8803Bus<Error = E>,
 {
     /// Creates a new `Rv8803Bus` from a I2C peripheral, and an I2C
     /// device address.
@@ -41,14 +44,15 @@ where
         Self {
             bus,
             address: address as u8,
+            _p: PhantomData,
         }
     }
 }
 
-impl<I2C, E> crate::Rv8803Bus for Bus<I2C>
+impl<I2C, E> crate::Rv8803Bus for Bus<'_, I2C>
 where
-    I2C: embedded_hal_0_2::blocking::i2c::Write<Error = E>
-        + embedded_hal_0_2::blocking::i2c::WriteRead<Error = E>,
+    I2C: embedded_hal_0_2::blocking::i2c::WriteRead<Error = E>
+        + embedded_hal_0_2::blocking::i2c::Write<Error = E>,
 {
     type Error = E;
 
