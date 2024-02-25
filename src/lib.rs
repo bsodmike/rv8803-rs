@@ -1,17 +1,13 @@
 //! RV8803 driver with support for I2C.
 #![no_std]
-#![cfg_attr(
-    feature = "async",
-    feature(async_fn_in_trait),
-    allow(incomplete_features)
-)]
+#![cfg_attr(feature = "async", allow(incomplete_features))]
 #![cfg_attr(docsrs, feature(doc_cfg), feature(doc_auto_cfg))]
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
 use crate::i2c0::Bus;
 pub use embedded_hal_0_2;
-use log::{debug, info, warn};
+use log::{debug, warn};
 
 #[cfg(feature = "alloc")]
 extern crate alloc;
@@ -98,7 +94,7 @@ where
         + embedded_hal_0_2::blocking::i2c::Write<Error = E>,
     Bus<'a, I2C>: Rv8803Bus<Error = E>,
 {
-    /// Create a new RV8803 from a [`i2c0::Bus`](crate::i2c0::Bus).
+    /// Create a new RV8803 from a [`i2c0::Bus`].
     pub fn new(bus: Bus<'a, I2C>) -> Result<Self, E> {
         Ok(Self { bus })
     }
@@ -162,7 +158,7 @@ where
         if bcd_to_dec(dest[0]) == 99 || bcd_to_dec(dest[1]) == 59 {
             let mut temp_time = [0_u8; TIME_ARRAY_LENGTH];
 
-            info!("update_time: if hundredths are at 99 or seconds are at 59, read again to make sure we didn't accidentally skip a second/minute / Hundreths: {} / Seconds: {}", bcd_to_dec(dest[0]),bcd_to_dec(dest[1]));
+            debug!("update_time: if hundredths are at 99 or seconds are at 59, read again to make sure we didn't accidentally skip a second/minute / Hundreths: {} / Seconds: {}", bcd_to_dec(dest[0]),bcd_to_dec(dest[1]));
 
             if !(self.bus.read_multiple_registers(
                 Register::Hundredths.address(),
@@ -175,7 +171,7 @@ where
 
             // If the reading for hundredths has rolled over, then our new data is correct, otherwise, we can leave the old data.
             if bcd_to_dec(dest[0]) > bcd_to_dec(temp_time[0]) {
-                info!("update_time: the reading for hundredths has rolled over, then our new data is correct. / Hundreths: {} / temp_time[0]: {}",
+                debug!("update_time: the reading for hundredths has rolled over, then our new data is correct. / Hundreths: {} / temp_time[0]: {}",
                 bcd_to_dec(dest[0]),
                 bcd_to_dec(temp_time[0]));
 

@@ -1,9 +1,9 @@
 [package]
-name = "rv8803-rs"
-version = "0.1.0"
+name = "rv8803"
+version = "0.3.2"
 authors = ["Michael de Silva <michael@mwdesilva.com>"]
 edition = "2021"
-repository = "https://github.com/bsodmike/"
+repository = "https://github.com/bsodmike/rv8803-rs"
 license = "MIT"
 description = "RV8803 driver with support for I2C"
 readme = "README.md"
