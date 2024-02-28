@@ -24,7 +24,7 @@ impl From<Address> for u8 {
     }
 }
 
-/// RV8803 bus.
+/// Holds an instance of an i2c bus, where the bus implements the `embedded-hal` traits [`embedded_hal_0_2::blocking::i2c::WriteRead`] and [`embedded_hal_0_2::blocking::i2c::Write`]
 #[derive(Debug)]
 pub struct Bus<'a, I2C> {
     address: u8,
