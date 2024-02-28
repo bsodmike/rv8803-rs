@@ -5,7 +5,7 @@
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
-use crate::i2c0::Bus;
+use crate::bus::Bus;
 pub use embedded_hal_0_2;
 use log::{debug, warn};
 
@@ -13,7 +13,7 @@ use log::{debug, warn};
 extern crate alloc;
 
 /// RV8803 I2C bus implementation with embedded-hal version 0.2
-pub mod i2c0;
+pub mod bus;
 
 /// All possible errors in this crate
 #[derive(Debug)]
@@ -101,8 +101,8 @@ where
 
     /// Creates a new `Rv8803` driver from a I2C peripheral, and an I2C
     /// device address.
-    pub fn from_i2c0(i2c: I2C, address: crate::i2c0::Address) -> Result<Self, E> {
-        let bus = crate::i2c0::Bus::new(i2c, address);
+    pub fn from_i2c(i2c: I2C, address: crate::bus::Address) -> Result<Self, E> {
+        let bus = crate::bus::Bus::new(i2c, address);
 
         Self::new(bus)
     }
