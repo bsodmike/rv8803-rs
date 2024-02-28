@@ -94,7 +94,7 @@ where
         + embedded_hal_0_2::blocking::i2c::Write<Error = E>,
     Bus<'a, I2C>: Rv8803Bus<Error = E>,
 {
-    /// Create a new RV8803 from a [`i2c0::Bus`].
+    /// Create a new RV8803 from a [`bus::Bus`].
     pub fn new(bus: Bus<'a, I2C>) -> Result<Self, E> {
         Ok(Self { bus })
     }
