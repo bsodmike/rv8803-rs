@@ -32,6 +32,7 @@ pub enum Register {
 }
 
 impl Register {
+    /// Read address value, returns as [`u8`]
     pub fn address(&self) -> u8 {
         *self as u8
     }
@@ -43,5 +44,6 @@ pub const TIME_ARRAY_LENGTH: usize = 8;
 /// RV8803 driver.
 #[derive(Debug)]
 pub struct Rv8803<B> {
+    /// Holds the bus.
     pub bus: B,
 }

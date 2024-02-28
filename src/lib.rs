@@ -13,8 +13,10 @@ use models::{Register, Rv8803, TIME_ARRAY_LENGTH};
 #[cfg(feature = "alloc")]
 extern crate alloc;
 
-mod bus;
-mod models;
+/// RV8803 I2C bus implementation with embedded-hal version 0.2
+pub mod bus;
+/// Models
+pub mod models;
 
 #[allow(dead_code)]
 impl<'a, I2C, E> Rv8803<Bus<'a, I2C>>
