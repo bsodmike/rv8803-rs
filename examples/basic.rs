@@ -2,7 +2,7 @@
 
 use i2cdev::linux::LinuxI2CError;
 use linux_embedded_hal::I2cdev;
-use rv8803::{Rv8803, Rv8803Error, TIME_ARRAY_LENGTH};
+use rv8803::models::{Rv8803, Rv8803Error, TIME_ARRAY_LENGTH};
 
 fn main() -> Result<(), Rv8803Error<LinuxI2CError>> {
     let i2c = I2cdev::new("/dev/i2c-1").map_err(Rv8803Error::I2c)?;

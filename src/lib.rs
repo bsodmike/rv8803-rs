@@ -5,94 +5,23 @@
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
-use crate::bus::Bus;
+use crate::bus::{Bus, BusTrait};
 pub use embedded_hal_0_2;
 use log::{debug, warn};
+use models::{Register, Rv8803, TIME_ARRAY_LENGTH};
 
 #[cfg(feature = "alloc")]
 extern crate alloc;
 
-/// RV8803 I2C bus implementation with embedded-hal version 0.2
-pub mod bus;
+mod bus;
+mod models;
 
-/// All possible errors in this crate
-#[derive(Debug)]
-pub enum Rv8803Error<E> {
-    /// I2C bus error
-    I2c(E),
-}
-
-/// Mapping of all the registers used to operate the RTC module
-#[derive(Clone, Copy)]
-pub enum Register {
-    /// Hundreths
-    Hundredths = 0x10,
-    /// Seconds
-    Seconds = 0x11,
-    /// Minutes
-    Minutes = 0x12,
-    /// Hours
-    Hours = 0x13,
-    /// Weekday
-    Weekday = 0x14,
-    /// Date
-    Date = 0x15,
-    /// Month
-    Month = 0x16,
-    /// Year
-    Year = 0x17,
-    /// ControlReset
-    ControlReset = 0,
-    /// Control
-    Control = 0x1F,
-}
-
-impl Register {
-    fn address(&self) -> u8 {
-        *self as u8
-    }
-}
-
-/// RV8803 bus.
-pub trait Rv8803Bus {
-    /// RV8803 bus error.
-    type Error;
-
-    /// Read from the RV8803
-    fn read_register(&mut self, register: Register) -> Result<u8, Self::Error>;
-
-    /// Write to the RV8803
-    fn write_register(&mut self, register: Register, value: u8) -> Result<(), Self::Error>;
-
-    /// Read multiple registers
-    fn read_multiple_registers(
-        &mut self,
-        addr: u8,
-        dest: &mut [u8],
-        len: usize,
-    ) -> Result<bool, Self::Error>;
-
-    /// Write to register by register address
-    fn write_register_by_addr(&mut self, reg_addr: u8, value: u8) -> Result<(), Self::Error>;
-
-    /// Read register by register address
-    fn read_register_by_addr(&mut self, reg_addr: u8) -> Result<u8, Self::Error>;
-}
-
-/// Length of the time array constant
-pub const TIME_ARRAY_LENGTH: usize = 8;
-
-/// RV8803 driver.
-#[derive(Debug)]
-pub struct Rv8803<B> {
-    bus: B,
-}
-
+#[allow(dead_code)]
 impl<'a, I2C, E> Rv8803<Bus<'a, I2C>>
 where
     I2C: embedded_hal_0_2::blocking::i2c::WriteRead<Error = E>
         + embedded_hal_0_2::blocking::i2c::Write<Error = E>,
-    Bus<'a, I2C>: Rv8803Bus<Error = E>,
+    Bus<'a, I2C>: bus::BusTrait<Error = E>,
 {
     /// Create a new RV8803 from a [`bus::Bus`].
     pub fn new(bus: Bus<'a, I2C>) -> Result<Self, E> {

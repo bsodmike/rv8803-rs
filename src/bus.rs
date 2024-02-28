@@ -1,6 +1,32 @@
 use super::Register;
 use core::marker::PhantomData;
 
+/// Bus trait (named [`BusTrait`]).
+pub trait BusTrait {
+    /// Bus error.
+    type Error;
+
+    /// Read from the RV8803
+    fn read_register(&mut self, register: Register) -> Result<u8, Self::Error>;
+
+    /// Write to the RV8803
+    fn write_register(&mut self, register: Register, value: u8) -> Result<(), Self::Error>;
+
+    /// Read multiple registers
+    fn read_multiple_registers(
+        &mut self,
+        addr: u8,
+        dest: &mut [u8],
+        len: usize,
+    ) -> Result<bool, Self::Error>;
+
+    /// Write to register by register address
+    fn write_register_by_addr(&mut self, reg_addr: u8, value: u8) -> Result<(), Self::Error>;
+
+    /// Read register by register address
+    fn read_register_by_addr(&mut self, reg_addr: u8) -> Result<u8, Self::Error>;
+}
+
 /// I2C device address.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
 #[repr(u8)]
@@ -36,9 +62,9 @@ impl<'a, I2C, E> Bus<'a, I2C>
 where
     I2C: embedded_hal_0_2::blocking::i2c::WriteRead<Error = E>
         + embedded_hal_0_2::blocking::i2c::Write<Error = E>,
-    Bus<'a, I2C>: crate::Rv8803Bus<Error = E>,
+    Bus<'a, I2C>: BusTrait<Error = E>,
 {
-    /// Creates a new `Rv8803Bus` from a I2C peripheral, and an I2C
+    /// Creates a new `BusTrait` from a I2C peripheral, and an I2C
     /// device address.
     pub fn new(bus: I2C, address: Address) -> Self {
         Self {
@@ -49,7 +75,7 @@ where
     }
 }
 
-impl<I2C, E> crate::Rv8803Bus for Bus<'_, I2C>
+impl<I2C, E> BusTrait for Bus<'_, I2C>
 where
     I2C: embedded_hal_0_2::blocking::i2c::WriteRead<Error = E>
         + embedded_hal_0_2::blocking::i2c::Write<Error = E>,
