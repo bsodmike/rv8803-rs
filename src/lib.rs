@@ -4,6 +4,10 @@
 #![cfg_attr(docsrs, feature(doc_cfg), feature(doc_auto_cfg))]
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
+#![feature(error_in_core)]
+#![feature(error_generic_member_access)]
+#![feature(fn_traits)]
+#![feature(unboxed_closures)]
 
 use crate::bus::{Bus, BusTrait};
 pub use embedded_hal_0_2;

@@ -1,11 +1,10 @@
 //! This example reads the chip ID from a RV8803.
-
-use i2cdev::linux::LinuxI2CError;
 use linux_embedded_hal::I2cdev;
-use rv8803::models::{Rv8803, Rv8803Error, TIME_ARRAY_LENGTH};
+use rv8803::models::{CrateError, Rv8803, TIME_ARRAY_LENGTH};
 
-fn main() -> Result<(), Rv8803Error<LinuxI2CError>> {
-    let i2c = I2cdev::new("/dev/i2c-1").map_err(Rv8803Error::I2c)?;
+fn main() -> Result<(), CrateError> {
+    let dev = I2cdev::new("/dev/i2c-1");
+    let i2c = dev.map_err(CrateError::default())?;
 
     let mut rtc: Rv8803<_> =
         Rv8803::from_i2c(i2c, rv8803::bus::Address::Default).expect("Failed to initialize RV8803");

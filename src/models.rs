@@ -1,9 +1,69 @@
 /// All possible errors in this crate
+use alloc::boxed::Box;
+use core::{error, fmt::Display};
+
+/// Type for all crate errors
+pub type CrateError = Error;
+/// Boxed error type
+pub type BoxError = Box<dyn error::Error + Send + Sync>;
+
 #[allow(dead_code)]
 #[derive(Debug)]
-pub enum Rv8803Error<E> {
-    /// I2C bus error
-    I2c(E),
+/// Error struct
+pub struct Error {
+    inner: BoxError,
+}
+
+impl Error {
+    /// Create a new instance of [`Error`]
+    pub fn new(error: impl Into<BoxError>) -> Self {
+        Self {
+            inner: error.into(),
+        }
+    }
+
+    /// Create a default instance of [`Error`]
+    #[allow(clippy::should_implement_trait)]
+    #[allow(clippy::unnecessary_literal_unwrap)]
+    pub fn default() -> Self {
+        Self {
+            // FIXME: isn't this the same as `panic!("{:?}", ())`??
+            inner: Err(()).unwrap(),
+        }
+    }
+}
+
+impl FnOnce<(linux_embedded_hal::i2cdev::linux::LinuxI2CError,)> for Error {
+    type Output = Error;
+
+    extern "rust-call" fn call_once(
+        self,
+        args: (linux_embedded_hal::i2cdev::linux::LinuxI2CError,),
+    ) -> Self::Output {
+        Error::new(args.0)
+    }
+}
+
+impl Display for CrateError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        self.inner.fmt(f)
+    }
+}
+
+impl error::Error for CrateError {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        Some(&*self.inner)
+    }
+
+    fn description(&self) -> &str {
+        "description() is deprecated; use Display"
+    }
+
+    fn cause(&self) -> Option<&dyn error::Error> {
+        self.source()
+    }
+
+    fn provide<'a>(&'a self, _request: &mut core::error::Request<'a>) {}
 }
 
 /// Mapping of all the registers used to operate the RTC module
