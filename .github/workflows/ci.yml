@@ -20,7 +20,6 @@ jobs:
           - "thumbv6m-none-eabi"
           - "thumbv7em-none-eabi"
         toolchain:
-          - "stable"
           - "nightly"
     steps:
       - uses: actions/checkout@v4
@@ -29,8 +28,8 @@ jobs:
           toolchain: ${{ matrix.toolchain }}
           target: ${{ matrix.target }}
       - run: cargo build --target ${{ matrix.target }}
-      - run: cargo build --target ${{ matrix.target }} --all-features
-        if: ${{ matrix.toolchain == 'nightly' }}
+      - run: cargo build --target ${{ matrix.target }} --features linux_embedded_hal
+        if: ${{ matrix.target == 'x86_64-unknown-linux-gnu' }}
 
   test:
     name: Unit Tests
