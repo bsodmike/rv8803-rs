@@ -33,6 +33,7 @@ impl Error {
     }
 }
 
+#[cfg(feature = "linux_embedded_hal")]
 impl FnOnce<(linux_embedded_hal::i2cdev::linux::LinuxI2CError,)> for Error {
     type Output = Error;
 

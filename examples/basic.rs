@@ -1,7 +1,10 @@
 //! This example reads the chip ID from a RV8803.
+#[cfg(feature = "linux_embedded_hal")]
 use linux_embedded_hal::I2cdev;
+#[allow(unused_imports)]
 use rv8803::models::{CrateError, Rv8803, TIME_ARRAY_LENGTH};
 
+#[cfg(feature = "linux_embedded_hal")]
 fn main() -> Result<(), CrateError> {
     let dev = I2cdev::new("/dev/i2c-1");
     let i2c = dev.map_err(CrateError::default())?;
@@ -21,5 +24,10 @@ fn main() -> Result<(), CrateError> {
         log::warn!("RTC: Failed reading latest time");
     }
 
+    Ok(())
+}
+
+#[cfg(not(feature = "linux_embedded_hal"))]
+fn main() -> Result<(), CrateError> {
     Ok(())
 }
