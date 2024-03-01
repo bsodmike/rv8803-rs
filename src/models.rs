@@ -1,6 +1,9 @@
 /// All possible errors in this crate
-use alloc::boxed::Box;
-use core::{error, fmt::Display};
+use alloc::{boxed::Box, string::ToString};
+use core::{
+    error::{self},
+    fmt::Display,
+};
 
 /// Type for all crate errors
 pub type CrateError = Error;
@@ -11,25 +14,46 @@ pub type BoxError = Box<dyn error::Error + Send + Sync>;
 #[derive(Debug)]
 /// Error struct
 pub struct Error {
-    inner: BoxError,
+    inner: Box<ErrorKind>,
+}
+
+#[allow(dead_code)]
+#[derive(Debug)]
+/// Error kind record struct holding both [`Kind`] and an [`Option`]< [`BoxError`]>
+struct ErrorKind {
+    kind: Kind,
+    cause: Option<BoxError>,
+}
+
+/// Error kind enum
+#[derive(Debug)]
+pub enum Kind {
+    /// Default crate error.
+    InternalError,
 }
 
 impl Error {
-    /// Create a new instance of [`Error`]
-    pub fn new(error: impl Into<BoxError>) -> Self {
+    /// Create a new instance of [`Error`] without a cause.
+    fn new(kind: Kind) -> Self {
         Self {
-            inner: error.into(),
+            inner: Box::new(ErrorKind { kind, cause: None }),
         }
     }
 
-    /// Create a default instance of [`Error`]
-    #[allow(clippy::should_implement_trait)]
-    #[allow(clippy::unnecessary_literal_unwrap)]
-    pub fn default() -> Self {
-        Self {
-            // FIXME: isn't this the same as `panic!("{:?}", ())`??
-            inner: Err(()).unwrap(),
-        }
+    /// Create a new instance of [`Error`] with cause of type [`BoxError`]
+    pub fn with<C: Into<BoxError>>(mut self, cause: C) -> Error {
+        self.inner.cause = Some(cause.into());
+        self
+    }
+
+    /// Create a new instance of [`Error`] of type [`Kind::InternalError`]
+    pub fn default_err() -> Self {
+        Self::new(Kind::InternalError)
+    }
+
+    /// Create a new instance of [`Error`] of type [`Kind::InternalError`] with cause of type [`BoxError`]
+    pub fn default_err_with_cause<E: Into<BoxError>>(cause: E) -> Self {
+        Self::default_err().with(cause)
     }
 }
 
@@ -41,19 +65,26 @@ impl FnOnce<(linux_embedded_hal::i2cdev::linux::LinuxI2CError,)> for Error {
         self,
         args: (linux_embedded_hal::i2cdev::linux::LinuxI2CError,),
     ) -> Self::Output {
-        Error::new(args.0)
+        Error::default_err_with_cause(args.0)
     }
 }
 
 impl Display for CrateError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        self.inner.fmt(f)
+        if let Some(ref cause) = self.inner.cause {
+            write!(f, "{}: {}", self.to_string(), cause)
+        } else {
+            f.write_str(&self.to_string())
+        }
     }
 }
 
 impl error::Error for CrateError {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
-        Some(&*self.inner)
+        self.inner
+            .cause
+            .as_ref()
+            .map(|cause| &**cause as &(dyn error::Error + 'static))
     }
 
     fn description(&self) -> &str {
