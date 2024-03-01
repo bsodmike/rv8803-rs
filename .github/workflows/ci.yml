@@ -99,6 +99,7 @@ jobs:
 
       - name: "cargo release publish"
         run: |-
+          cargo release \
             publish \
             --all-features \
             --allow-branch HEAD \
