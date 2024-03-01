@@ -1,5 +1,5 @@
 /// All possible errors in this crate
-use alloc::{boxed::Box, string::ToString};
+use alloc::boxed::Box;
 use core::{
     error::{self},
     fmt::Display,
@@ -72,9 +72,9 @@ impl FnOnce<(linux_embedded_hal::i2cdev::linux::LinuxI2CError,)> for Error {
 impl Display for CrateError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         if let Some(ref cause) = self.inner.cause {
-            write!(f, "{}: {}", self.to_string(), cause)
+            write!(f, "{}: {}", "CrateError", cause)
         } else {
-            f.write_str(&self.to_string())
+            f.write_str("CrateError: Unknown error")
         }
     }
 }
