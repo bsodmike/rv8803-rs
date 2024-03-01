@@ -19,6 +19,8 @@ extern crate alloc;
 
 /// RV8803 I2C bus implementation with embedded-hal version 0.2
 pub mod bus;
+/// Error handler for this crate
+pub mod error;
 /// Models
 pub mod models;
 
