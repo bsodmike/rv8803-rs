@@ -7,7 +7,7 @@ use rv8803::models::{CrateError, Rv8803, TIME_ARRAY_LENGTH};
 #[cfg(feature = "linux_embedded_hal")]
 fn main() -> Result<(), CrateError> {
     let dev = I2cdev::new("/dev/i2c-1");
-    let i2c = dev.map_err(CrateError::default())?;
+    let i2c = dev.map_err(CrateError::default_err_with_cause)?;
 
     let mut rtc: Rv8803<_> =
         Rv8803::from_i2c(i2c, rv8803::bus::Address::Default).expect("Failed to initialize RV8803");
