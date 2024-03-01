@@ -99,6 +99,8 @@ jobs:
 
       - name: "cargo release publish"
         run: |-
-          cargo +nightly release \
             publish \
-            --all-features
+            --all-features \
+            --allow-branch HEAD \
+            --no-confirm \
+            --execute
