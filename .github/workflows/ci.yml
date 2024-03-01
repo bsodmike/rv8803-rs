@@ -82,7 +82,7 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@nightly
 
       - name: cargo-release Cache
         id: cargo_release_cache
@@ -99,6 +99,6 @@ jobs:
 
       - name: "cargo release publish"
         run: |-
-          cargo release \
+          cargo +nightly release \
             publish \
             --all-features
