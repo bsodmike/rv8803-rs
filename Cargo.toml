@@ -22,7 +22,7 @@ embedded-hal = { package = "embedded-hal", version = "^1.0" }
 embedded-hal-0-2 = { package = "embedded-hal", version = "0.2.7", features = ["unproven"] }
 serde = { version = "1", features = ["derive"], default-features = false, optional = true }
 embedded-hal-async = { package = "embedded-hal-async", version = "^1.0", optional = true }
-linux-embedded-hal = { version = "^0.3", optional = true }
+linux-embedded-hal = { version = "^0.4", optional = true }
 
 [dev-dependencies]
 i2cdev = "0.5.1"
