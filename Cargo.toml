@@ -25,7 +25,7 @@ embedded-hal-async = { package = "embedded-hal-async", version = "^1.0", optiona
 linux-embedded-hal = { version = "^0.3", optional = true }
 
 [dev-dependencies]
-i2cdev = "0.5.1"
+i2cdev = "0.6.1"
 
 [package.metadata.docs.rs]
 all-features = true
