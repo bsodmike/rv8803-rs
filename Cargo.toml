@@ -1,28 +1,31 @@
 [package]
 name = "rv8803"
-version = "0.4.4"
-authors = ["Michael de Silva <michael@mwdesilva.com>"]
+version = "3.0.1"
+authors = ["Michael de Silva <michael@cyberdynea.io>"]
 edition = "2021"
 repository = "https://github.com/bsodmike/rv8803-rs"
 license = "MIT"
-description = "RV8803 driver with support for I2C"
+description = "RTC clock driver for the rv8803 chip via I2C"
 readme = "README.md"
 keywords = ["i2c", "driver", "embedded-hal-driver", "rv8803"]
 categories = ["embedded", "hardware-support", "no-std"]
 
 [features]
-default = ["alloc"]
-alloc = []
+default = ["async", "defmt"]
 async = ["embedded-hal-async"]
-linux_embedded_hal = ["linux-embedded-hal"]
+linux_embedded_hal = ["linux-embedded-hal", "log"]
 
 [dependencies]
-log = "0.4"
+defmt = { version = "0.3", optional = true }
+log = { version = "0.4", optional = true }
 embedded-hal = { package = "embedded-hal", version = "^1.0" }
 embedded-hal-0-2 = { package = "embedded-hal", version = "0.2.7", features = ["unproven"] }
 serde = { version = "1", features = ["derive"], default-features = false, optional = true }
 embedded-hal-async = { package = "embedded-hal-async", version = "^1.0", optional = true }
 linux-embedded-hal = { version = "^0.3", optional = true }
+heapless = { version = "0.8", default-features = false }
+chrono = { version = "0.4.38", default-features = false }
+shared-bus = { version = "0.3.1" }
 
 [dev-dependencies]
 i2cdev = "0.5.1"
