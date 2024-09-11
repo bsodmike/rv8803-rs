@@ -28,8 +28,6 @@ jobs:
           toolchain: ${{ matrix.toolchain }}
           target: ${{ matrix.target }}
       - run: cargo build --target ${{ matrix.target }}
-      - run: cargo build --target ${{ matrix.target }} --features linux_embedded_hal
-        if: ${{ matrix.target == 'x86_64-unknown-linux-gnu' }}
 
   test:
     name: Unit Tests
@@ -38,7 +36,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly
-      - run: cargo test --all-features
+      - run: cargo test
 
   clippy:
     name: Clippy
@@ -48,7 +46,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@nightly
         with:
           components: clippy
-      - run: cargo clippy --all-features --all-targets -- --deny warnings
+      - run: cargo clippy -- -Dclippy::all -Dclippy::pedantic --deny warnings
 
   format:
     name: Format
@@ -67,7 +65,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly
-      - run: cargo +nightly rustdoc --all-features
+      - run: cargo +nightly rustdoc
+
+  examples:
+    name: Examples
+    runs-on: ubuntu-latest
+    env: {"RUSTFLAGS": "-D warnings"}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+      - run: cargo build --examples
 
   crates_io_publish:
     name: Publish (crates.io)
@@ -77,6 +84,7 @@ jobs:
       - test
       - clippy
       - format
+      - examples
       - doc
     runs-on: ubuntu-latest
     timeout-minutes: 25

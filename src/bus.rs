@@ -1,18 +1,33 @@
-use super::Register;
+use super::models::Register;
+#[allow(unused_imports)]
+use crate::error::DriverTransferError;
 use core::marker::PhantomData;
 
-/// Bus trait (named [`BusTrait`]).
+/// Trait for [`Bus`]
+#[allow(clippy::module_name_repetitions)]
 pub trait BusTrait {
     /// Bus error.
     type Error;
 
-    /// Read from the RV8803
+    /// Read from the `rv8803` chip.
+    ///
+    /// # Errors
+    ///
+    /// Will return [`BusTrait::Error`] if the read attempt fails.
     fn read_register(&mut self, register: Register) -> Result<u8, Self::Error>;
 
-    /// Write to the RV8803
+    /// Write to the `rv8803` chip.
+    ///
+    /// # Errors
+    ///
+    /// Will return [`BusTrait::Error`] if the write attempt fails.
     fn write_register(&mut self, register: Register, value: u8) -> Result<(), Self::Error>;
 
     /// Read multiple registers
+    ///
+    /// # Errors
+    ///
+    /// Will return [`BusTrait::Error`] if the read attempt fails.
     fn read_multiple_registers(
         &mut self,
         addr: u8,
@@ -21,41 +36,27 @@ pub trait BusTrait {
     ) -> Result<bool, Self::Error>;
 
     /// Write to register by register address
+    ///
+    /// # Errors
+    ///
+    /// Will return [`BusTrait::Error`] if the write attempt fails.
     fn write_register_by_addr(&mut self, reg_addr: u8, value: u8) -> Result<(), Self::Error>;
 
     /// Read register by register address
+    ///
+    /// # Errors
+    ///
+    /// Will return [`BusTrait::Error`] if the read attempt fails.
     fn read_register_by_addr(&mut self, reg_addr: u8) -> Result<u8, Self::Error>;
 }
 
-/// I2C device address.
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
-#[repr(u8)]
-pub enum Address {
-    /// Default device address
-    Default = 0x32,
-}
-
-impl Address {
-    /// Value of the address variant
-    pub fn value(&self) -> u8 {
-        *self as u8
-    }
-}
-
-impl From<Address> for u8 {
-    fn from(value: Address) -> Self {
-        match value {
-            Address::Default => Address::Default.value(),
-        }
-    }
-}
-
-/// Holds an instance of an i2c bus, where the bus implements the `embedded-hal` traits [`embedded_hal_0_2::blocking::i2c::WriteRead`] and [`embedded_hal_0_2::blocking::i2c::Write`]
+/// Struct type to hold an I2C peripheral
 #[derive(Debug)]
+#[allow(clippy::struct_field_names)]
 pub struct Bus<'a, I2C> {
     address: u8,
     bus: I2C,
-    _p: PhantomData<&'a I2C>,
+    _i2c: PhantomData<&'a I2C>,
 }
 
 impl<'a, I2C, E> Bus<'a, I2C>
@@ -64,13 +65,12 @@ where
         + embedded_hal_0_2::blocking::i2c::Write<Error = E>,
     Bus<'a, I2C>: BusTrait<Error = E>,
 {
-    /// Creates a new `BusTrait` from a I2C peripheral, and an I2C
-    /// device address.
-    pub fn new(bus: I2C, address: Address) -> Self {
+    /// Creates a new [`Bus`] from an I2C peripheral.
+    pub fn new(bus: I2C, address: &u8) -> Self {
         Self {
             bus,
-            address: address as u8,
-            _p: PhantomData,
+            address: *address,
+            _i2c: PhantomData,
         }
     }
 }
