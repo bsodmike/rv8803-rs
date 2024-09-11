@@ -6,14 +6,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.4.4] - 2024-03-01
+## [1.0.0] - 14 Sept 2024
+
+### Changed
+- __Breaking Change__: Removed alloc as a default requirement
+- __Breaking Change__: Brand new public API via `RTCClock`, refer to docs for details.
+- Tested (compilation/clippy) with Embassy and `defmt`.
+- TODO: Testing on actual hardware.
+
+## [0.4.4] - 1 March 2024
 
 ### Changed
 - __Breaking Change__: Fully revised module organisation
 - __Breaking Change__: Revised error API
 - Renamed `Rv8803<_>::from_i2c0` to `Rv8803<_>::from_i2c`.
 
-## [0.1.0] - 2022-01-01
+## [0.1.0] - 1 January 2022
 - Initial release
 
 

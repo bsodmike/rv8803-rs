@@ -2,6 +2,7 @@
 
 /// Mapping of all the registers used to operate the RTC module
 #[derive(Clone, Copy)]
+#[allow(clippy::doc_markdown)]
 pub enum Register {
     /// Hundreths
     Hundredths = 0x10,
@@ -27,8 +28,8 @@ pub enum Register {
 
 impl Register {
     /// Read address value, returns as [`u8`]
-    pub fn address(&self) -> u8 {
-        *self as u8
+    pub fn address(self) -> u8 {
+        self as u8
     }
 }
 
