@@ -9,7 +9,7 @@ Refer to the [docs](https://docs.rs/rv8803/latest/rv8803/) for further examples.
 
 ### WARNING!
 
-Latest release simply stabilises a new public API, however, this still needs testing on actual hardware and is pending.
+The [latest release](https://crates.io/crates/rv8803) simply stabilises a new public API, however, this still needs testing on actual hardware and is pending.
 
 Should you wish to contribute towards this effort, kindly do so by opening issues/PRs.  Thanks!
 
