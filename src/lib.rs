@@ -1,28 +1,29 @@
-//! RV8803 driver with support for I2C.
+//! RV8803 driver for I2C.
 #![no_std]
-#![cfg_attr(feature = "async", allow(incomplete_features))]
-#![cfg_attr(docsrs, feature(doc_cfg), feature(doc_auto_cfg))]
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
-#![feature(error_in_core)]
+#![cfg_attr(feature = "async", allow(incomplete_features))]
+#![cfg_attr(docsrs, feature(doc_cfg), feature(doc_auto_cfg))]
 #![feature(error_generic_member_access)]
-#![feature(fn_traits)]
-#![feature(unboxed_closures)]
+#![feature(trivial_bounds)]
 
 use crate::bus::{Bus, BusTrait};
 pub use embedded_hal_0_2;
-use log::{debug, warn};
 use models::{Register, Rv8803, TIME_ARRAY_LENGTH};
-
-#[cfg(feature = "alloc")]
-extern crate alloc;
 
 /// RV8803 I2C bus implementation with embedded-hal version 0.2
 pub mod bus;
-/// Error handler for this crate
-pub mod error;
+
 /// Models
-pub mod models;
+pub(crate) mod models;
+
+pub(crate) mod error;
+
+/// Re-exports
+pub mod prelude {
+    pub use crate::bus::Bus;
+    pub use crate::error::Error;
+}
 
 #[allow(dead_code)]
 impl<'a, I2C, E> Rv8803<Bus<'a, I2C>>
@@ -31,20 +32,40 @@ where
         + embedded_hal_0_2::blocking::i2c::Write<Error = E>,
     Bus<'a, I2C>: bus::BusTrait<Error = E>,
 {
-    /// Create a new RV8803 from a [`bus::Bus`].
-    pub fn new(bus: Bus<'a, I2C>) -> Result<Self, E> {
-        Ok(Self { bus })
+    /// Create a new RV8803 from a [`crate::driver::Bus`].
+    ///
+    /// # Errors
+    ///
+    /// If this function encounters an error, it will be returned.
+    pub fn new(bus: Bus<'a, I2C>) -> Self {
+        Self { bus }
     }
 
     /// Creates a new `Rv8803` driver from a I2C peripheral, and an I2C
     /// device address.
-    pub fn from_i2c(i2c: I2C, address: crate::bus::Address) -> Result<Self, E> {
-        let bus = crate::bus::Bus::new(i2c, address);
+    pub fn from_i2c(i2c: I2C, address: u8) -> Self {
+        let bus = crate::bus::Bus::new(i2c, &address);
+
+        Self::new(bus)
+    }
+
+    /// Creates a new `Rv8803` driver from a I2C peripheral, and an I2C
+    /// device address.
+    pub fn from_bus(i2c: I2C, address: u8) -> Self {
+        let bus = crate::bus::Bus::new(i2c, &address);
 
         Self::new(bus)
     }
 
     /// Set time on the RV8803 module
+    ///
+    /// # Errors
+    ///
+    /// If the year specified is always > 2000, hence `u16` casting to `u8`
+    /// is OK, as long as the year is < 2100. When the year > 2255 this will
+    /// return [`core::num::TryFromIntError`].
+    ///
+    /// Read/write errors during communication with the `rv8803` chip will also return an error.
     #[allow(clippy::too_many_arguments)]
     pub fn set_time(
         &mut self,
@@ -55,7 +76,10 @@ where
         date: u8,
         month: u8,
         year: u16,
-    ) -> Result<bool, E> {
+    ) -> Result<bool, E>
+    where
+        E: core::convert::From<core::num::TryFromIntError>,
+    {
         self.bus
             .write_register(Register::Seconds, dec_to_bcd(sec))?;
         self.bus
@@ -65,17 +89,17 @@ where
         self.bus
             .write_register(Register::Month, dec_to_bcd(month))?;
         self.bus
-            .write_register(Register::Year, dec_to_bcd((year - 2000) as u8))?;
+            .write_register(Register::Year, dec_to_bcd(u8::try_from(year - 2000)?))?;
         self.bus.write_register(Register::Weekday, weekday)?;
 
-        //Set RESET bit to 0 after setting time to make sure seconds don't get stuck.
+        // Set RESET bit to 0 after setting time to make sure seconds don't get stuck.
         self.write_bit(
             Register::Control.address(),
             Register::ControlReset.address(),
             false,
         )?;
 
-        debug!("rv8803::set_time: updated RTC clock");
+        defmt::debug!("rv8803::set_time: updated RTC clock");
 
         Ok(true)
     }
@@ -87,7 +111,7 @@ where
             dest,
             TIME_ARRAY_LENGTH,
         )?) {
-            warn!("update_time: attempt read - fail 1");
+            defmt::warn!("update_time: attempt read - fail 1");
             return Ok(false); // Something went wrong
         }
 
@@ -95,25 +119,25 @@ where
         if bcd_to_dec(dest[0]) == 99 || bcd_to_dec(dest[1]) == 59 {
             let mut temp_time = [0_u8; TIME_ARRAY_LENGTH];
 
-            debug!("update_time: if hundredths are at 99 or seconds are at 59, read again to make sure we didn't accidentally skip a second/minute / Hundreths: {} / Seconds: {}", bcd_to_dec(dest[0]),bcd_to_dec(dest[1]));
+            defmt::debug!("update_time: if hundredths are at 99 or seconds are at 59, read again to make sure we didn't accidentally skip a second/minute / Hundreths: {} / Seconds: {}", bcd_to_dec(dest[0]),bcd_to_dec(dest[1]));
 
             if !(self.bus.read_multiple_registers(
                 Register::Hundredths.address(),
                 &mut temp_time,
                 TIME_ARRAY_LENGTH,
             )?) {
-                warn!("update_time: attempt read - fail 2");
+                defmt::warn!("update_time: attempt read - fail 2");
                 return Ok(false); // Something went wrong
             };
 
             // If the reading for hundredths has rolled over, then our new data is correct, otherwise, we can leave the old data.
             if bcd_to_dec(dest[0]) > bcd_to_dec(temp_time[0]) {
-                debug!("update_time: the reading for hundredths has rolled over, then our new data is correct. / Hundreths: {} / temp_time[0]: {}",
+                defmt::debug!("update_time: the reading for hundredths has rolled over, then our new data is correct. / Hundreths: {} / temp_time[0]: {}",
                 bcd_to_dec(dest[0]),
                 bcd_to_dec(temp_time[0]));
 
                 for (i, el) in temp_time.iter().enumerate() {
-                    dest[i] = *el
+                    dest[i] = *el;
                 }
             }
         }
@@ -122,11 +146,11 @@ where
         let mut buf = [0_u8; 8];
         for (i, el) in dest.iter().enumerate() {
             // Note: Weekday does not undergo BCD to Decimal conversion.
-            if i != 4 {
-                // println!("Raw: {} / BCD to Dec: {}", *el, bcd_to_dec(*el));
-                buf[i] = bcd_to_dec(*el)
+            if i == 4 {
+                buf[i] = *el;
             } else {
-                buf[i] = *el
+                defmt::info!("Raw: {} / BCD to Dec: {}", *el, bcd_to_dec(*el));
+                buf[i] = bcd_to_dec(*el);
             }
         }
 
@@ -139,7 +163,7 @@ where
     pub fn write_bit(&mut self, reg_addr: u8, bit_addr: u8, bit_to_write: bool) -> Result<bool, E> {
         let mut value = 0;
         if let Ok(reg_value) = self.bus.read_register_by_addr(reg_addr) {
-            value = reg_value
+            value = reg_value;
         }
 
         value &= !(1 << bit_addr);
@@ -165,9 +189,11 @@ where
     }
 
     /// Set the year and update the RTC clock
-    pub fn set_year(&mut self, year: u16) -> Result<u8, E> {
-        let years_since_2000 = (year - 2000) as u8;
-        let year = dec_to_bcd(years_since_2000);
+    pub fn set_year(&mut self, year: u16) -> Result<u8, E>
+    where
+        E: core::convert::From<core::num::TryFromIntError>,
+    {
+        let year = dec_to_bcd(u8::try_from(year - 2000)?);
 
         self.bus.write_register(Register::Year, year)?;
 
@@ -181,4 +207,88 @@ fn bcd_to_dec(value: u8) -> u8 {
 
 fn dec_to_bcd(value: u8) -> u8 {
     ((value / 10) * 0x10) + (value % 10)
+}
+
+/// Module for [`crate::rtc::RTClock`]
+#[allow(unused_imports)]
+pub mod rtc {
+    use crate::Rv8803;
+    use chrono::{DateTime, Utc};
+    use core::marker::PhantomData;
+    use defmt::error;
+    use heapless::String;
+    use shared_bus::BusManager;
+
+    /// The [`RTClock`] type is the interface for communicating with the `rv8803` rtc clock chip via a shared bus over I2C.
+    #[allow(dead_code)]
+    pub struct RTClock<'a, I2C, I2cErr, M> {
+        datetime: Option<DateTime<Utc>>,
+        phantom: PhantomData<&'a I2C>,
+        bus_err: PhantomData<&'a I2cErr>,
+        bus: BusManager<M>,
+        device_address: u8,
+    }
+
+    #[allow(dead_code)]
+    impl<'a, I2C, I2cErr, SharedBusMutex> RTClock<'a, I2C, I2cErr, SharedBusMutex>
+    where
+        I2C: embedded_hal_0_2::blocking::i2c::Write<Error = I2cErr>
+            + embedded_hal_0_2::blocking::i2c::WriteRead<Error = I2cErr>,
+        SharedBusMutex: shared_bus::BusMutex,
+        <SharedBusMutex as shared_bus::BusMutex>::Bus: embedded_hal_0_2::blocking::i2c::Write<Error = I2cErr>
+            + embedded_hal_0_2::blocking::i2c::WriteRead<Error = I2cErr>,
+        I2cErr: defmt::Format,
+    {
+        /// Creates a new [`RTClock`].
+        pub fn new(bus: BusManager<SharedBusMutex>, address: &u8) -> Self {
+            Self {
+                datetime: None,
+                bus,
+                phantom: PhantomData,
+                bus_err: PhantomData,
+                device_address: *address,
+            }
+        }
+
+        /// Access the driver for the rtc clock.
+        pub fn rtc(
+            &self,
+        ) -> Rv8803<crate::prelude::Bus<'_, shared_bus::I2cProxy<'_, SharedBusMutex>>> {
+            let proxy = self.bus.acquire_i2c();
+
+            Rv8803::from_i2c(proxy, self.device_address)
+        }
+    }
+
+    /// The [`RTClock`] type is the interface for communicating with the `rv8803` rtc clock chip directly over I2C.
+    #[allow(dead_code)]
+    pub struct RTClockDirect<'a, I2C, I2cErr> {
+        datetime: Option<DateTime<Utc>>,
+        periph: I2C,
+        bus_err: PhantomData<&'a I2cErr>,
+        device_address: u8,
+    }
+
+    #[allow(dead_code)]
+    impl<'a, I2C, I2cErr> RTClockDirect<'a, I2C, I2cErr>
+    where
+        I2C: embedded_hal_0_2::blocking::i2c::Write<Error = I2cErr>
+            + embedded_hal_0_2::blocking::i2c::WriteRead<Error = I2cErr>,
+        // I2cErr: defmt::Format,
+    {
+        /// Creates a new [`RTClock`].
+        pub fn new(periph: I2C, address: &u8) -> Self {
+            Self {
+                datetime: None,
+                periph,
+                bus_err: PhantomData,
+                device_address: *address,
+            }
+        }
+
+        /// Access the driver for the rtc clock.
+        pub fn rtc(self) -> Rv8803<crate::prelude::Bus<'static, I2C>> {
+            Rv8803::from_i2c(self.periph, self.device_address)
+        }
+    }
 }
