@@ -1,4 +1,4 @@
-use super::Register;
+use super::models::Register;
 use core::marker::PhantomData;
 
 /// Trait for [`Bus`]
@@ -48,7 +48,7 @@ pub trait BusTrait {
     fn read_register_by_addr(&mut self, reg_addr: u8) -> Result<u8, Self::Error>;
 }
 
-/// This is an I2C bus that implements [`embedded_hal_0_2::blocking::i2c::WriteRead`] and [`embedded_hal_0_2::blocking::i2c::Write`]
+/// Struct type to hold an I2C peripheral
 #[derive(Debug)]
 #[allow(clippy::struct_field_names)]
 pub struct Bus<'a, I2C> {
