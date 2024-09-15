@@ -1,4 +1,5 @@
-/// All the models
+/// Length of the time array constant
+pub const TIME_ARRAY_LENGTH: usize = 8;
 
 /// Mapping of all the registers used to operate the RTC module
 #[derive(Clone, Copy)]
@@ -31,14 +32,4 @@ impl Register {
     pub fn address(self) -> u8 {
         self as u8
     }
-}
-
-/// Length of the time array constant
-pub const TIME_ARRAY_LENGTH: usize = 8;
-
-/// RV8803 driver.
-#[derive(Debug)]
-pub struct Rv8803<B> {
-    /// Holds the bus.
-    pub bus: B,
 }

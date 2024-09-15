@@ -6,7 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.0.0] - 14 Sept 2024
+## [3.0.0] - 15 Sept 2024
+
+### Changed
+- __Breaking Change__: Underlying driver is protected from the public API.
+
+## [2.0.0] - 14 Sept 2024 - Yanked
 
 ### Changed
 - __Breaking Change__: `RTClock::new()` accepts a shared reference to the shared bus; this allows communicating with multiple rtc chips at different addresses.
