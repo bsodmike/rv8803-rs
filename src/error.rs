@@ -1,3 +1,5 @@
+use crate::driver::HandlesError;
+
 /// Error type
 #[derive(Debug)]
 pub struct Error(dyn core::error::Error + Send + Sync);
@@ -31,6 +33,10 @@ impl core::error::Error for Error {
 pub enum DriverError {
     /// When a checked integral type conversion fails.
     TryFromIntError(core::num::TryFromIntError),
+}
+
+impl HandlesError for DriverError {
+    fn with(_err: &(dyn core::error::Error + Send + Sync)) {}
 }
 
 impl From<core::num::TryFromIntError> for DriverError {

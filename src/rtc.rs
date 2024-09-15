@@ -1,5 +1,4 @@
-use crate::driver::Driver;
-use crate::error::DriverError;
+use crate::{driver::Driver, error::DriverError};
 use chrono::{DateTime, Utc};
 use core::marker::PhantomData;
 #[allow(unused_imports)]
@@ -16,6 +15,7 @@ pub struct RTClock<'a, I2C, I2cErr, M> {
     bus_err: PhantomData<&'a I2cErr>,
     bus: &'a BusManager<M>,
     device_address: u8,
+    // driver_error: PhantomData<DriverError>,
 }
 
 #[allow(dead_code)]
@@ -37,6 +37,7 @@ where
             phantom: PhantomData,
             bus_err: PhantomData,
             device_address: *address,
+            // driver_error: PhantomData,
         }
     }
 
@@ -72,7 +73,8 @@ where
     /// Read/write errors during communication with the `rv8803` chip will return an error.
     pub fn update_time(&mut self, dest: &mut [u8]) -> Result<bool, DriverError> {
         let proxy = self.bus.acquire_i2c();
-        let mut driver = Driver::from_i2c(proxy, self.device_address);
+        let mut driver: Driver<crate::prelude::Bus<'_, shared_bus::I2cProxy<'_, SharedBusMutex>>> =
+            Driver::from_i2c(proxy, self.device_address);
 
         Ok(driver.update_time(dest)?)
     }
@@ -85,6 +87,7 @@ pub struct RTClockDirect<'a, I2C, I2cErr> {
     periph: I2C,
     bus_err: PhantomData<&'a I2cErr>,
     device_address: u8,
+    // driver_error: PhantomData<DriverError>,
 }
 
 #[allow(dead_code)]
@@ -101,6 +104,7 @@ where
             periph,
             bus_err: PhantomData,
             device_address: *address,
+            // driver_error: PhantomData,
         }
     }
 
