@@ -1,4 +1,4 @@
-use crate::{driver::Driver, error::DriverError};
+use crate::{driver::Driver, error::DriverTransferError};
 use chrono::{DateTime, Utc};
 use core::marker::PhantomData;
 #[allow(unused_imports)]
@@ -30,7 +30,7 @@ where
     // + embedded_hal_0_2::blocking::i2c::WriteRead<Error = I2cErr>
     // + embedded_hal_0_2::blocking::i2c::Read<Error = I2cErr>
     // + embedded_hal_0_2::blocking::i2c::Write<Error = I2cErr>,
-    DriverError<I2cErr>: From<I2cErr>,
+    DriverTransferError<I2cErr>: From<I2cErr>,
 {
     /// Creates a new [`RTClock`].
     pub fn new(bus: &'a BusManager<SharedBusMutex>, address: &u8) -> Self {
@@ -59,7 +59,7 @@ where
         date: u8,
         month: u8,
         year: u16,
-    ) -> Result<bool, DriverError<I2cErr>> {
+    ) -> Result<bool, DriverTransferError<I2cErr>> {
         let proxy = self.bus.acquire_i2c();
         let mut driver = Driver::from_i2c(proxy, self.device_address);
 
@@ -74,7 +74,7 @@ where
     /// # Errors
     ///
     /// Read/write errors during communication with the `rv8803` chip will return an error.
-    pub fn update_time(&mut self, dest: &mut [u8]) -> Result<bool, DriverError<I2cErr>> {
+    pub fn update_time(&mut self, dest: &mut [u8]) -> Result<bool, DriverTransferError<I2cErr>> {
         let proxy = self.bus.acquire_i2c();
         let mut driver: Driver<crate::prelude::Bus<'_, shared_bus::I2cProxy<'_, SharedBusMutex>>> =
             Driver::from_i2c(proxy, self.device_address);
@@ -98,7 +98,7 @@ impl<'a, I2C, I2cErr> RTClockDirect<'a, I2C, I2cErr>
 where
     I2C: embedded_hal_0_2::blocking::i2c::Write<Error = I2cErr>
         + embedded_hal_0_2::blocking::i2c::WriteRead<Error = I2cErr>,
-    DriverError<I2cErr>: From<I2cErr>,
+    DriverTransferError<I2cErr>: From<I2cErr>,
     // I2cErr: embedded_hal_0_2::blocking::i2c::WriteRead<Error = I2cErr>
     //     + embedded_hal_0_2::blocking::i2c::Read<Error = I2cErr>
     //     + embedded_hal_0_2::blocking::i2c::Write<Error = I2cErr>,

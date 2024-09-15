@@ -24,20 +24,22 @@ impl core::error::Error for Error {
     fn provide<'a>(&'a self, _request: &mut core::error::Request<'a>) {}
 }
 
-/// Driver error.
+/// Driver transfer error.
+
+// NOTE: This feels like a "shim" as the generic error type is always assumed to cause an I2C transfer error.  However, the type provided is just a struct from a dependent crate.  Sometimes these types do not have any traits, and since this is a driver, there is no context as to what specific driver is being used with this HAL this lib is depending on.
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[allow(clippy::module_name_repetitions)]
-pub enum DriverError<I2CError> {
+pub enum DriverTransferError<E> {
     /// Error during I2C Transfer
     Transfer,
 
     #[allow(missing_docs)]
-    _Phant(core::marker::PhantomData<I2CError>),
+    _Phant(core::marker::PhantomData<E>),
 }
 
-impl<I2CError> From<I2CError> for DriverError<I2CError> {
-    fn from(_value: I2CError) -> Self {
-        self::DriverError::Transfer
+impl<E> From<E> for DriverTransferError<E> {
+    fn from(_value: E) -> Self {
+        self::DriverTransferError::Transfer
     }
 }

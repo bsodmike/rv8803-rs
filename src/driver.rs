@@ -1,5 +1,5 @@
 use crate::bus::{self, Bus, BusTrait};
-use crate::error::DriverError;
+use crate::error::DriverTransferError;
 // use crate::error::DriverError;
 use crate::models::{Register, TIME_ARRAY_LENGTH};
 
@@ -17,7 +17,7 @@ where
         + embedded_hal_0_2::blocking::i2c::Write<Error = E>,
     Bus<'a, I2C>: bus::BusTrait<Error = E>,
     // DriverErrorGenT: From<E> + HandlesError,
-    DriverError<E>: From<E>,
+    DriverTransferError<E>: From<E>,
     // E: embedded_hal_0_2::blocking::i2c::WriteRead<Error = E>
     //     + embedded_hal_0_2::blocking::i2c::Write<Error = E>
     //     + embedded_hal_0_2::blocking::i2c::Read<Error = E>,
@@ -69,7 +69,7 @@ where
         date: u8,
         month: u8,
         year: u16,
-    ) -> Result<bool, crate::prelude::DriverError<E>> {
+    ) -> Result<bool, crate::prelude::DriverTransferError<E>> {
         match u8::try_from(year - 2000) {
             Ok(year) => {
                 self.bus
@@ -97,7 +97,7 @@ where
             // Err(err) => match err {
             //     TryFromIntError => Err(crate::error::DriverError::TryFromIntError(err)),
             // },
-            Err(_err) => Err(DriverError::Transfer),
+            Err(_err) => Err(DriverTransferError::Transfer),
         }
     }
 
