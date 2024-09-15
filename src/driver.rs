@@ -1,6 +1,5 @@
 use crate::bus::{self, Bus, BusTrait};
 use crate::error::DriverTransferError;
-// use crate::error::DriverError;
 use crate::models::{Register, TIME_ARRAY_LENGTH};
 
 /// Driver driver.
@@ -16,11 +15,7 @@ where
     I2C: embedded_hal_0_2::blocking::i2c::WriteRead<Error = E>
         + embedded_hal_0_2::blocking::i2c::Write<Error = E>,
     Bus<'a, I2C>: bus::BusTrait<Error = E>,
-    // DriverErrorGenT: From<E> + HandlesError,
     DriverTransferError<E>: From<E>,
-    // E: embedded_hal_0_2::blocking::i2c::WriteRead<Error = E>
-    //     + embedded_hal_0_2::blocking::i2c::Write<Error = E>
-    //     + embedded_hal_0_2::blocking::i2c::Read<Error = E>,
 {
     /// Create a new Driver from a [`crate::prelude::Bus`].
     ///
@@ -94,9 +89,6 @@ where
 
                 Ok(true)
             }
-            // Err(err) => match err {
-            //     TryFromIntError => Err(crate::error::DriverError::TryFromIntError(err)),
-            // },
             Err(_err) => Err(DriverTransferError::Transfer),
         }
     }
