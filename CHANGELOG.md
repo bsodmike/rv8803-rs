@@ -6,12 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [3.0.1] - 15 Sept 2024
+## [4.0.0] - 15 Sept 2024
+
+### Fixed
+- Error handling
 
 ### Changed
 - Doc corrections.
 
-## [3.0.0] - 15 Sept 2024
+## [3.0.0] - 15 Sept 2024 - Yanked
 
 ### Changed
 - __Breaking Change__: Underlying driver is protected from the public API.

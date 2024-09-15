@@ -1,5 +1,3 @@
-use crate::driver::HandlesError;
-
 /// Error type
 #[derive(Debug)]
 pub struct Error(dyn core::error::Error + Send + Sync);
@@ -30,17 +28,16 @@ impl core::error::Error for Error {
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[allow(clippy::module_name_repetitions)]
-pub enum DriverError {
-    /// When a checked integral type conversion fails.
-    TryFromIntError(core::num::TryFromIntError),
+pub enum DriverError<I2CError> {
+    /// Error during I2C Transfer
+    Transfer,
+
+    #[allow(missing_docs)]
+    _Phant(core::marker::PhantomData<I2CError>),
 }
 
-impl HandlesError for DriverError {
-    fn with(_err: &(dyn core::error::Error + Send + Sync)) {}
-}
-
-impl From<core::num::TryFromIntError> for DriverError {
-    fn from(value: core::num::TryFromIntError) -> Self {
-        self::DriverError::TryFromIntError(value)
+impl<I2CError> From<I2CError> for DriverError<I2CError> {
+    fn from(_value: I2CError) -> Self {
+        self::DriverError::Transfer
     }
 }

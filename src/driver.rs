@@ -1,21 +1,13 @@
-use core::marker::PhantomData;
-use core::num::TryFromIntError;
-
 use crate::bus::{self, Bus, BusTrait};
 use crate::error::DriverError;
 // use crate::error::DriverError;
 use crate::models::{Register, TIME_ARRAY_LENGTH};
-
-pub trait HandlesError {
-    fn with(err: &(dyn core::error::Error + Send + Sync));
-}
 
 /// Driver driver.
 #[derive(Debug)]
 pub struct Driver<B> {
     /// Holds the bus.
     pub bus: B,
-    // driver_error: PhantomData<DriverErrorGenT>,
 }
 
 #[allow(dead_code)]
@@ -25,7 +17,10 @@ where
         + embedded_hal_0_2::blocking::i2c::Write<Error = E>,
     Bus<'a, I2C>: bus::BusTrait<Error = E>,
     // DriverErrorGenT: From<E> + HandlesError,
-    DriverError: From<E>,
+    DriverError<E>: From<E>,
+    // E: embedded_hal_0_2::blocking::i2c::WriteRead<Error = E>
+    //     + embedded_hal_0_2::blocking::i2c::Write<Error = E>
+    //     + embedded_hal_0_2::blocking::i2c::Read<Error = E>,
 {
     /// Create a new Driver from a [`crate::prelude::Bus`].
     ///
@@ -74,7 +69,7 @@ where
         date: u8,
         month: u8,
         year: u16,
-    ) -> Result<bool, crate::prelude::DriverError> {
+    ) -> Result<bool, crate::prelude::DriverError<E>> {
         match u8::try_from(year - 2000) {
             Ok(year) => {
                 self.bus
@@ -102,7 +97,7 @@ where
             // Err(err) => match err {
             //     TryFromIntError => Err(crate::error::DriverError::TryFromIntError(err)),
             // },
-            Err(err) => Err(DriverError::TryFromIntError(err)),
+            Err(_err) => Err(DriverError::Transfer),
         }
     }
 
