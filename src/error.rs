@@ -23,3 +23,18 @@ impl core::error::Error for Error {
 
     fn provide<'a>(&'a self, _request: &mut core::error::Request<'a>) {}
 }
+
+/// Driver error.
+#[derive(Debug, PartialEq, Eq, Copy, Clone)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
+#[allow(clippy::module_name_repetitions)]
+pub enum DriverError {
+    /// When a checked integral type conversion fails.
+    TryFromIntError(core::num::TryFromIntError),
+}
+
+impl From<core::num::TryFromIntError> for DriverError {
+    fn from(value: core::num::TryFromIntError) -> Self {
+        self::DriverError::TryFromIntError(value)
+    }
+}

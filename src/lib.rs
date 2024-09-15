@@ -26,5 +26,5 @@ pub mod rtc;
 /// Re-exports
 pub mod prelude {
     pub use crate::bus::Bus;
-    pub use crate::error::Error;
+    pub use crate::error::{DriverError, Error};
 }

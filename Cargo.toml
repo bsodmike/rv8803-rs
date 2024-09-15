@@ -1,6 +1,6 @@
 [package]
 name = "rv8803"
-version = "3.0.0"
+version = "3.0.1"
 authors = ["Michael de Silva <michael@cyberdynea.io>"]
 edition = "2021"
 repository = "https://github.com/bsodmike/rv8803-rs"
@@ -11,12 +11,12 @@ keywords = ["i2c", "driver", "embedded-hal-driver", "rv8803"]
 categories = ["embedded", "hardware-support", "no-std"]
 
 [features]
-default = ["async"]
+default = ["async", "defmt"]
 async = ["embedded-hal-async"]
 linux_embedded_hal = ["linux-embedded-hal", "log"]
 
 [dependencies]
-defmt = "0.3"
+defmt = { version = "0.3", optional = true }
 log = { version = "0.4", optional = true }
 embedded-hal = { package = "embedded-hal", version = "^1.0" }
 embedded-hal-0-2 = { package = "embedded-hal", version = "0.2.7", features = ["unproven"] }

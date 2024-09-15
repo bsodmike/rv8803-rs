@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.1] - 15 Sept 2024
+
+### Changed
+- Doc corrections.
+
 ## [3.0.0] - 15 Sept 2024
 
 ### Changed
@@ -16,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - __Breaking Change__: `RTClock::new()` accepts a shared reference to the shared bus; this allows communicating with multiple rtc chips at different addresses.
 
-## [1.0.0] - 14 Sept 2024
+## [1.0.0] - 14 Sept 2024 - Yanked
 
 ### Changed
 - __Breaking Change__: Removed alloc as a default requirement

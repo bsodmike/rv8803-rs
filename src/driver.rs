@@ -1,4 +1,5 @@
 use crate::bus::{self, Bus, BusTrait};
+use crate::error::DriverError;
 use crate::models::{Register, TIME_ARRAY_LENGTH};
 
 /// Driver driver.
@@ -14,6 +15,7 @@ where
     I2C: embedded_hal_0_2::blocking::i2c::WriteRead<Error = E>
         + embedded_hal_0_2::blocking::i2c::Write<Error = E>,
     Bus<'a, I2C>: bus::BusTrait<Error = E>,
+    DriverError: From<E>,
 {
     /// Create a new Driver from a [`crate::prelude::Bus`].
     ///
@@ -59,32 +61,33 @@ where
         date: u8,
         month: u8,
         year: u16,
-    ) -> Result<bool, E>
-    where
-        E: core::convert::From<core::num::TryFromIntError>,
-    {
-        self.bus
-            .write_register(Register::Seconds, dec_to_bcd(sec))?;
-        self.bus
-            .write_register(Register::Minutes, dec_to_bcd(min))?;
-        self.bus.write_register(Register::Hours, dec_to_bcd(hour))?;
-        self.bus.write_register(Register::Date, dec_to_bcd(date))?;
-        self.bus
-            .write_register(Register::Month, dec_to_bcd(month))?;
-        self.bus
-            .write_register(Register::Year, dec_to_bcd(u8::try_from(year - 2000)?))?;
-        self.bus.write_register(Register::Weekday, weekday)?;
+    ) -> Result<bool, DriverError> {
+        match u8::try_from(year - 2000) {
+            Ok(year) => {
+                self.bus
+                    .write_register(Register::Seconds, dec_to_bcd(sec))?;
+                self.bus
+                    .write_register(Register::Minutes, dec_to_bcd(min))?;
+                self.bus.write_register(Register::Hours, dec_to_bcd(hour))?;
+                self.bus.write_register(Register::Date, dec_to_bcd(date))?;
+                self.bus
+                    .write_register(Register::Month, dec_to_bcd(month))?;
+                self.bus.write_register(Register::Year, dec_to_bcd(year))?;
+                self.bus.write_register(Register::Weekday, weekday)?;
 
-        // Set RESET bit to 0 after setting time to make sure seconds don't get stuck.
-        self.write_bit(
-            Register::Control.address(),
-            Register::ControlReset.address(),
-            false,
-        )?;
+                // Set RESET bit to 0 after setting time to make sure seconds don't get stuck.
+                self.write_bit(
+                    Register::Control.address(),
+                    Register::ControlReset.address(),
+                    false,
+                )?;
 
-        defmt::debug!("Driver::set_time: updated RTC clock");
+                defmt::debug!("Driver::set_time: updated RTC clock");
 
-        Ok(true)
+                Ok(true)
+            }
+            Err(err) => Err(DriverError::TryFromIntError(err)),
+        }
     }
 
     /// Fetch time from the RTC clock and store it in the buffer `dest`.
