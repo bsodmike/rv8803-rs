@@ -35,10 +35,14 @@ jobs:
     name: Unit Tests
     runs-on: ubuntu-latest
     env: {"RUSTFLAGS": "-D warnings"}
+    strategy:
+      matrix:
+        features:
+          - "blocking"
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly
-      - run: cargo test --all-features
+      - run: cargo test --no-default-features --features=${{ matrix.features }}
 
   clippy:
     name: Clippy
@@ -48,7 +52,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@nightly
         with:
           components: clippy
-      - run: cargo clippy --all-features --all-targets -- --deny warnings
+      - run: cargo clippy -- -Dclippy::all -Dclippy::pedantic --deny warnings
 
   format:
     name: Format
@@ -63,11 +67,15 @@ jobs:
   doc:
     name: doc
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        features:
+          - "blocking"
     env: {"RUSTDOCFLAGS": "-D warnings --cfg docsrs"}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly
-      - run: cargo +nightly rustdoc --all-features
+      - run: cargo +nightly rustdoc --features=${{ matrix.features }} --no-default-features
 
   crates_io_publish:
     name: Publish (crates.io)

@@ -6,10 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [4.0.0] - 15 Sept 2024
+## [4.0.0] - XX Sept 2024
 
-### Fixed
-- Error handling
+### Added
+- Feature gates to allow `async` I2C comms in a future release.  However, this needs testing on hardware.
+
+### Changed
+- __Breaking Change__: Rewamped blocking I2C with `embedded-hal` v0.2; Testing on hardware pending.
 
 ### Changed
 - Doc corrections.
