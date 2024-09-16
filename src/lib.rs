@@ -1,4 +1,6 @@
-//! `rv8803` driver for I2C.
+//! RTC clock driver for the `rv8803` chip over I2C.
+//!
+//! Latest implementation supports `blocking` transfer, with plans to support `Async` in the future via `embedded-hal` v1.0.
 #![no_std]
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
@@ -13,13 +15,13 @@ extern crate alloc;
 
 pub use embedded_hal_0_2;
 
-pub(crate) mod error;
-
-/// A blocking I2C bus, allowing communications over an I2C peripheral.
+/// An I2C bus, allowing communications over an I2C peripheral.
 pub mod bus;
 
 /// Underlying driver.
 pub(crate) mod driver;
+
+pub(crate) mod error;
 
 /// Models
 pub(crate) mod models;

@@ -13,6 +13,11 @@ The [latest release](https://crates.io/crates/rv8803) simply stabilises a new pu
 
 Should you wish to contribute towards this effort, kindly do so by opening issues/PRs.  Thanks!
 
+### Upcoming enhancements (in no particular order)
+
+- [ ] I2C `Async` support via `embedded-hal` v1.0
+- TBD: If you have any requests, please open an issue!
+
 ### Building
 
 This runs a `release` build, runs tests and generates docs.

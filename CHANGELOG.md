@@ -13,9 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - __Breaking Change__: Rewamped blocking I2C with `embedded-hal` v0.2; Testing on hardware pending.
-
-### Changed
-- Doc corrections.
+- Tested linux example with `I2cdev` and added to Github CI.
 
 ## [3.0.0] - 15 Sept 2024 - Yanked
 
