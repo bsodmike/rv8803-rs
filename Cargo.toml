@@ -11,9 +11,11 @@ keywords = ["i2c", "driver", "embedded-hal-driver", "rv8803"]
 categories = ["embedded", "hardware-support", "no-std"]
 
 [features]
-default = ["async", "defmt"]
-async = ["embedded-hal-async"]
+default = ["async"]
+async = ["defmt", "embedded-hal-async", "alloc"]
 linux_embedded_hal = ["linux-embedded-hal", "log"]
+blocking = ["defmt"]
+alloc = []
 
 [dependencies]
 defmt = { version = "0.3", optional = true }
