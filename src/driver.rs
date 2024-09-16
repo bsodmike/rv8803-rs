@@ -23,35 +23,17 @@ impl<'a, I2C, E> Driver<Bus<'a, I2C>>
 where
     I2C: embedded_hal_0_2::blocking::i2c::WriteRead<Error = E>
         + embedded_hal_0_2::blocking::i2c::Write<Error = E>,
+    // &'a I2C: embedded_hal_0_2::blocking::i2c::WriteRead<Error = E>
+    //     + embedded_hal_0_2::blocking::i2c::Write<Error = E>,
     Bus<'a, I2C>: bus::BusTrait<Error = E>,
     DriverTransferError<E>: From<E>,
 {
-    /// Create a new Driver from a [`crate::prelude::Bus`].
-    ///
-    /// # Errors
-    ///
-    /// If this function encounters an error, it will be returned.
-    pub fn new(bus: Bus<'a, I2C>) -> Self {
-        Self {
-            bus,
-            // driver_error: PhantomData,
-        }
-    }
-
     /// Creates a new `Driver` driver from a I2C peripheral, and an I2C
     /// device address.
-    pub fn from_i2c(i2c: I2C, address: u8) -> Self {
+    pub fn new(i2c: I2C, address: u8) -> Self {
         let bus = crate::bus::Bus::new(i2c, &address);
 
-        Self::new(bus)
-    }
-
-    /// Creates a new `Driver` driver from a I2C peripheral, and an I2C
-    /// device address.
-    pub fn from_bus(i2c: I2C, address: u8) -> Self {
-        let bus = crate::bus::Bus::new(i2c, &address);
-
-        Self::new(bus)
+        Self { bus }
     }
 
     /// Set time on the Driver module
@@ -94,6 +76,7 @@ where
                     false,
                 )?;
 
+                #[cfg(feature = "defmt")]
                 defmt::debug!("Driver::set_time: updated RTC clock");
 
                 Ok(true)
@@ -109,6 +92,7 @@ where
             dest,
             TIME_ARRAY_LENGTH,
         )?) {
+            #[cfg(feature = "defmt")]
             defmt::warn!("update_time: attempt read - fail 1");
             return Ok(false); // Something went wrong
         }
@@ -117,6 +101,7 @@ where
         if bcd_to_dec(dest[0]) == 99 || bcd_to_dec(dest[1]) == 59 {
             let mut temp_time = [0_u8; TIME_ARRAY_LENGTH];
 
+            #[cfg(feature = "defmt")]
             defmt::debug!("update_time: if hundredths are at 99 or seconds are at 59, read again to make sure we didn't accidentally skip a second/minute / Hundreths: {} / Seconds: {}", bcd_to_dec(dest[0]),bcd_to_dec(dest[1]));
 
             if !(self.bus.read_multiple_registers(
@@ -124,12 +109,14 @@ where
                 &mut temp_time,
                 TIME_ARRAY_LENGTH,
             )?) {
+                #[cfg(feature = "defmt")]
                 defmt::warn!("update_time: attempt read - fail 2");
                 return Ok(false); // Something went wrong
             };
 
             // If the reading for hundredths has rolled over, then our new data is correct, otherwise, we can leave the old data.
             if bcd_to_dec(dest[0]) > bcd_to_dec(temp_time[0]) {
+                #[cfg(feature = "defmt")]
                 defmt::debug!("update_time: the reading for hundredths has rolled over, then our new data is correct. / Hundreths: {} / temp_time[0]: {}",
                 bcd_to_dec(dest[0]),
                 bcd_to_dec(temp_time[0]));
@@ -147,6 +134,7 @@ where
             if i == 4 {
                 buf[i] = *el;
             } else {
+                #[cfg(feature = "defmt")]
                 defmt::info!("Raw: {} / BCD to Dec: {}", *el, bcd_to_dec(*el));
                 buf[i] = bcd_to_dec(*el);
             }

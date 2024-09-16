@@ -1,6 +1,6 @@
 [package]
 name = "rv8803"
-version = "3.0.1"
+version = "4.0.0"
 authors = ["Michael de Silva <michael@cyberdynea.io>"]
 edition = "2021"
 repository = "https://github.com/bsodmike/rv8803-rs"
@@ -11,22 +11,24 @@ keywords = ["i2c", "driver", "embedded-hal-driver", "rv8803"]
 categories = ["embedded", "hardware-support", "no-std"]
 
 [features]
-default = ["async"]
-async = ["defmt", "embedded-hal-async", "alloc"]
-linux_embedded_hal = ["linux-embedded-hal", "log"]
-blocking = ["defmt"]
-alloc = []
+default = ["defmt", "blocking"]
+blocking = []
+linux_embedded_hal = ["blocking", "linux-embedded-hal", "log",]
+
+# FIXME: This needs further testing before released into the public API.
+# alloc = []
+# async = ["defmt", "embedded-hal-async", "alloc"]
 
 [dependencies]
+chrono = { version = "0.4.38", default-features = false }
 defmt = { version = "0.3", optional = true }
-log = { version = "0.4", optional = true }
+heapless = { version = "0.8", default-features = false }
 embedded-hal = { package = "embedded-hal", version = "^1.0" }
 embedded-hal-0-2 = { package = "embedded-hal", version = "0.2.7", features = ["unproven"] }
-serde = { version = "1", features = ["derive"], default-features = false, optional = true }
 embedded-hal-async = { package = "embedded-hal-async", version = "^1.0", optional = true }
 linux-embedded-hal = { version = "^0.3", optional = true }
-heapless = { version = "0.8", default-features = false }
-chrono = { version = "0.4.38", default-features = false }
+log = { version = "0.4", optional = true }
+serde = { version = "1", features = ["derive"], default-features = false, optional = true }
 shared-bus = { version = "0.3.1" }
 
 [dev-dependencies]

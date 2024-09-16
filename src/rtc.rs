@@ -1,6 +1,8 @@
+#[allow(unused_imports)]
 use crate::{driver::Driver, error::DriverTransferError};
 use chrono::{DateTime, Utc};
 use core::marker::PhantomData;
+#[cfg(feature = "defmt")]
 #[allow(unused_imports)]
 use defmt::error;
 #[allow(unused_imports)]
@@ -20,7 +22,7 @@ pub struct RTClock<'a, I2C, I2cErr, M> {
     device_address: u8,
 }
 
-#[cfg(feature = "blocking")]
+#[cfg(all(feature = "blocking", feature = "defmt"))]
 #[allow(dead_code)]
 impl<'a, I2C, I2cErr, SharedBusMutex> RTClock<'a, I2C, I2cErr, SharedBusMutex>
 where
@@ -60,7 +62,7 @@ where
         year: u16,
     ) -> Result<bool, DriverTransferError<I2cErr>> {
         let proxy = self.bus.acquire_i2c();
-        let mut driver = Driver::from_i2c(proxy, self.device_address);
+        let mut driver = Driver::new(proxy, self.device_address);
 
         match driver.set_time(sec, min, hour, weekday, date, month, year) {
             Ok(val) => Ok(val),
@@ -76,7 +78,7 @@ where
     pub fn update_time(&mut self, dest: &mut [u8]) -> Result<bool, DriverTransferError<I2cErr>> {
         let proxy = self.bus.acquire_i2c();
         let mut driver: Driver<crate::prelude::Bus<'_, shared_bus::I2cProxy<'_, SharedBusMutex>>> =
-            Driver::from_i2c(proxy, self.device_address);
+            Driver::new(proxy, self.device_address);
 
         Ok(driver.update_time(dest)?)
     }
@@ -108,6 +110,17 @@ where
             bus_err: PhantomData,
             device_address: *address,
         }
+    }
+
+    /// Fetch time from the RTC clock and store it in the buffer `dest`.
+    ///
+    /// # Errors
+    ///
+    /// Read/write errors during communication with the `rv8803` chip will return an error.
+    pub fn update_time(self, dest: &mut [u8]) -> Result<bool, DriverTransferError<I2cErr>> {
+        let mut driver = Driver::new(self.periph, self.device_address);
+
+        Ok(driver.update_time(dest)?)
     }
 }
 

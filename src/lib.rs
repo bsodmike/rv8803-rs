@@ -6,6 +6,7 @@
 #![cfg_attr(docsrs, feature(doc_cfg), feature(doc_auto_cfg))]
 #![feature(error_generic_member_access)]
 #![feature(trivial_bounds)]
+#![allow(unexpected_cfgs)]
 
 #[cfg(feature = "alloc")]
 extern crate alloc;

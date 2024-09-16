@@ -29,7 +29,8 @@ impl core::error::Error for Error {
 
 /// Driver transfer error.
 
-// NOTE: This feels like a "shim" as the generic error type is always assumed to cause an I2C transfer error.  However, the type provided is just a struct from a dependent crate.  Sometimes these types do not have any traits (refer to https://docs.embassy.dev/embassy-stm32/git/stm32wl55cc-cm4/i2c/enum.Error.html), and since this is a driver, there is no context as to what specific driver is being used with this HAL this lib is depending on.
+// NOTE: The error type in `embassy_stm32::i2c::Error` does not impl any traits (refer to https://docs.embassy.dev/embassy-stm32/git/stm32wl55cc-cm4/i2c/enum.Error.html), and since this is a driver, there is no context as to what specific driver is being used with this HAL this lib is depending on.
+// Hence a generic type is used on `DriverTransferError<E>` to aid as a workaround.
 #[derive(Debug)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[allow(clippy::module_name_repetitions)]

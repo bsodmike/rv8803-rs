@@ -2,8 +2,6 @@
 #![feature(error_generic_member_access)]
 
 use error::Error;
-#[allow(unused_imports)]
-use rv8803::rtc::RTClock;
 
 #[cfg(feature = "linux_embedded_hal")]
 use linux_embedded_hal::I2cdev;
@@ -22,7 +20,6 @@ fn main() -> Result<(), Error> {
 
     // Fetch time from RTC.
     let update = rtc
-        .rtc()
         .update_time(&mut time)
         .expect("Fetched latest time from RTC");
     if !update {
