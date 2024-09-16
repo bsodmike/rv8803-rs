@@ -7,6 +7,9 @@
 #![feature(error_generic_member_access)]
 #![feature(trivial_bounds)]
 
+#[cfg(feature = "alloc")]
+extern crate alloc;
+
 pub use embedded_hal_0_2;
 
 pub(crate) mod error;
