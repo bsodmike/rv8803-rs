@@ -7,15 +7,28 @@ use i2cdriver::I2CDriver;
 use rv8803::experimental::{Driver, DriverTransferError};
 use std::result::Result;
 
+use embedded_hal_0_2::blocking::i2c::Read;
+
 fn main() -> Result<(), Error> {
     let mut i2c = I2CDriver::open("/dev/ttyUSB0").context("open I2CDriver")?;
     let device_address: u8 = 0x32;
 
-    let driver1 = Driver::using_periph(&mut i2c, &device_address);
+    let mut driver1: Driver<
+        '_,
+        I2CDriver<i2cdriver::NormalMode>,
+        shared_bus::NullMutex<I2CDriver<i2cdriver::NormalMode>>,
+    > = Driver::using_periph(&mut i2c, &device_address);
+
+    // FIXME
+    // let bm1: &mut shared_bus::BusManager<shared_bus::NullMutex<I2CDriver<i2cdriver::NormalMode>>> =
+    //     driver1.bm();
+
+    // let bm1: shared_bus::I2cProxy<'_, shared_bus::NullMutex<I2CDriver<i2cdriver::NormalMode>>> =
+    //     driver1.bm().acquire_i2c();
     // let driver2 = Driver::using_periph(&mut i2c, &device_address);
 
     let mut buf = [0u8, 255];
-    let _ = driver1.periph.read(device_address, &mut buf);
+    // let _ = bm1.read(device_address, &mut buf);
 
     Ok(())
 }

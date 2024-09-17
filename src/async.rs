@@ -1,3 +1,7 @@
+use core::marker::PhantomData;
+
+use shared_bus::BusMutex;
+
 #[cfg(feature = "async")]
 #[allow(unused_imports)]
 use crate::error::DriverAsyncError;
@@ -8,20 +12,31 @@ use crate::{
 };
 
 #[derive(Debug)]
-pub struct Driver<'a, P> {
-    pub periph: &'a mut P,
+pub struct Driver<'a, P, M> {
+    bus_manager: shared_bus::BusManager<M>,
+    _periph: PhantomData<&'a P>,
 }
 
 #[allow(dead_code)]
-impl<'a, I2C> Driver<'a, I2C>
-// where
-//     I2C: embedded_hal::i2c::I2c<Error = Box<dyn embedded_hal::i2c::Error>>,
-// DriverTransferError<E>: From<Box<dyn embedded_hal::i2c::Error>>,
+impl<'a, I2C, SharedBusMutex> Driver<'a, I2C, SharedBusMutex>
+where
+    SharedBusMutex: shared_bus::BusMutex<Bus = shared_bus::NullMutex<&'a mut I2C>>,
+    // DriverTransferError<E>: From<Box<dyn embedded_hal::i2c::Error>>,
 {
     /// Creates a new `Driver` driver from a I2C peripheral, and an I2C
     /// device address.
     pub fn using_periph(i2c: &'a mut I2C, address: &u8) -> Self {
-        Self { periph: i2c }
+        let bm = shared_bus::NullMutex::create(i2c);
+        let shared = shared_bus::BusManager::new(bm);
+
+        Self {
+            bus_manager: shared,
+            _periph: PhantomData,
+        }
+    }
+
+    pub fn bm(&mut self) -> &mut shared_bus::BusManager<SharedBusMutex> {
+        &mut self.bus_manager
     }
 }
 
