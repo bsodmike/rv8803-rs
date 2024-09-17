@@ -129,6 +129,7 @@ where
 #[derive(Debug)]
 #[cfg(feature = "async")]
 #[allow(clippy::struct_field_names)]
+#[allow(clippy::module_name_repetitions)]
 pub struct BusAsync<'a, I2C> {
     address: u8,
     bus: &'a mut I2C,

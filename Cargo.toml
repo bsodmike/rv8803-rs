@@ -11,14 +11,14 @@ keywords = ["i2c", "driver", "embedded-hal-driver", "rv8803"]
 categories = ["embedded", "hardware-support", "no-std"]
 
 [features]
-default = ["blocking"]
+default = ["async"]
 alloc = []
 async = ["alloc"]
 blocking = []
 linux_blocking = ["blocking", "linux_embedded_hal"]
 linux_async = ["async", "linux_embedded_hal"]
 linux_embedded_hal = ["linux-embedded-hal", "log",]
-
+experimental = []
 # FIXME: This needs further testing before released into the public API.
 # alloc = []
 # async = ["defmt", "embedded-hal-async", "alloc"]
@@ -37,6 +37,8 @@ shared-bus = { version = "0.3.1" }
 
 [dev-dependencies]
 i2cdev = "0.5.1"
+i2cdriver = "0.2.1"
+anyhow = "1.0.89"
 
 [package.metadata.docs.rs]
 all-features = true

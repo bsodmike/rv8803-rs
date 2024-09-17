@@ -26,8 +26,17 @@ pub(crate) mod error;
 /// Models
 pub(crate) mod models;
 
+pub(crate) mod r#async;
+
 /// Driver for the `rv8803` rtc chip.
 pub mod rtc;
+
+/// Experimental Re-exports
+// #[cfg(feature = "experimental")]
+pub mod experimental {
+    pub use crate::error::{DriverTransferError, Error};
+    pub use crate::r#async::Driver;
+}
 
 /// Re-exports
 pub mod prelude {

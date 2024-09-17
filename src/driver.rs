@@ -45,12 +45,6 @@ where
         Self { bus }
     }
 
-    // pub fn from_bus(bus: Bus<'a, I2C>) -> Self {
-    //     // let bus = crate::bus::Bus::new(i2c, &address);
-
-    //     Self { bus }
-    // }
-
     /// Set time on the Driver module
     ///
     /// # Errors
@@ -203,6 +197,7 @@ where
 }
 
 #[cfg(feature = "async")]
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug)]
 pub struct DriverAsync<'a, B> {
     /// Holds the bus.

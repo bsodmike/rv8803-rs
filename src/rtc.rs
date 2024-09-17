@@ -2,6 +2,7 @@
 use crate::bus;
 
 #[cfg(feature = "blocking")]
+#[allow(unused_imports)]
 use crate::bus::Bus;
 #[cfg(feature = "blocking")]
 use crate::driver::Driver;
