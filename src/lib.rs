@@ -31,6 +31,11 @@ pub mod rtc;
 
 /// Re-exports
 pub mod prelude {
+    #[cfg(feature = "blocking")]
     pub use crate::bus::Bus;
+
+    #[cfg(feature = "async")]
+    pub use crate::bus::BusAsync;
+
     pub use crate::error::{DriverTransferError, Error};
 }

@@ -55,6 +55,7 @@ pub trait BusTrait {
 
 /// Struct type to hold an I2C peripheral
 #[derive(Debug)]
+#[cfg(feature = "blocking")]
 #[allow(clippy::struct_field_names)]
 pub struct Bus<'a, I2C> {
     address: u8,
@@ -124,23 +125,37 @@ where
     }
 }
 
+/// Struct type to hold an I2C peripheral
+#[derive(Debug)]
 #[cfg(feature = "async")]
-impl<'a, I2C> Bus<'a, I2C>
-where
-    I2C: embedded_hal::i2c::I2c<Error = Box<dyn embedded_hal::i2c::Error>>,
+#[allow(clippy::struct_field_names)]
+pub struct BusAsync<'a, I2C> {
+    address: u8,
+    bus: &'a mut I2C,
+    _i2c: PhantomData<&'a I2C>,
+}
+
+#[cfg(feature = "async")]
+impl<'a, I2C> BusAsync<'a, I2C>
+// where
+//     I2C: embedded_hal::i2c::I2c<Error = Box<dyn embedded_hal::i2c::Error>>,
 {
     /// Creates a new [`Bus`] from an I2C peripheral.
-    pub fn initialise(bus: I2C, address: &u8) -> Self {
+    pub fn initialise(bus: &'a mut I2C, address: &u8) -> Self {
         Self {
             bus,
             address: *address,
             _i2c: PhantomData,
         }
     }
+
+    pub fn inner(&mut self) -> &mut I2C {
+        self.bus
+    }
 }
 
 #[cfg(feature = "async")]
-impl<I2C> BusTrait for Bus<'_, I2C>
+impl<'a, I2C> BusTrait for BusAsync<'a, I2C>
 where
     I2C: embedded_hal::i2c::I2c<Error = Box<dyn embedded_hal::i2c::Error>>,
 {

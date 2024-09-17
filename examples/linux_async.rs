@@ -3,33 +3,34 @@
 
 use error::Error;
 
-#[cfg(feature = "linux_embedded_hal")]
+#[cfg(feature = "linux_async")]
 use linux_embedded_hal::I2cdev;
-#[allow(unused_imports)]
-use rv8803::rtc::RTClockDirect;
 
-#[cfg(feature = "linux_embedded_hal")]
+#[cfg(feature = "linux_async")]
 fn main() -> Result<(), Error> {
     let dev = I2cdev::new("/dev/i2c-1").expect("Unable to unwrap device");
     let device_address: u8 = 0x32;
-    let rtc = RTClockDirect::new(dev, &device_address);
+    let bus = shared_bus::BusManagerSimple::new(dev);
+    let proxy = bus.acquire_i2c();
+
+    // let rtc = RTClock::new(proxy, &device_address);
 
     std::thread::sleep(std::time::Duration::from_millis(2));
 
     let mut time = [0_u8; 8_usize];
 
     // Fetch time from RTC.
-    let update = rtc
-        .update_time(&mut time)
-        .expect("Fetched latest time from RTC");
-    if !update {
-        log::warn!("RTC: Failed reading latest time");
-    }
+    // let update = rtc
+    //     .update_time(&mut time)
+    //     .expect("Fetched latest time from RTC");
+    // if !update {
+    //     log::warn!("RTC: Failed reading latest time");
+    // }
 
     Ok(())
 }
 
-#[cfg(not(feature = "linux_embedded_hal"))]
+#[cfg(not(feature = "linux_async"))]
 fn main() -> Result<(), Error> {
     Ok(())
 }

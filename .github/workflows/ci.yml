@@ -81,10 +81,15 @@ jobs:
     name: Examples
     runs-on: ubuntu-latest
     env: {"RUSTFLAGS": "-D warnings"}
+    strategy:
+      matrix:
+        features:
+          - "linux_async"
+          - "linux_blocking"
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly
-      - run: cargo build --examples --features=linux_embedded_hal --no-default-features
+      - run: cargo b --examples --features=${{ matrix.features }} --no-default-features
 
   crates_io_publish:
     name: Publish (crates.io)

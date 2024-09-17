@@ -102,8 +102,9 @@ impl From<DriverTransferError<Box<dyn embedded_hal::i2c::Error>>> for DriverTran
 
 #[derive(Debug)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
-#[allow(clippy::module_name_repetitions)]
 #[cfg(feature = "async")]
+#[allow(clippy::module_name_repetitions)]
+#[allow(dead_code)]
 pub enum DriverAsyncError {
     Transfer(DriverTransferError<Box<dyn embedded_hal::i2c::Error>>),
 }

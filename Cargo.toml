@@ -11,9 +11,13 @@ keywords = ["i2c", "driver", "embedded-hal-driver", "rv8803"]
 categories = ["embedded", "hardware-support", "no-std"]
 
 [features]
-default = ["defmt", "blocking"]
+default = ["blocking"]
+alloc = []
+async = ["alloc"]
 blocking = []
-linux_embedded_hal = ["blocking", "linux-embedded-hal", "log",]
+linux_blocking = ["blocking", "linux_embedded_hal"]
+linux_async = ["async", "linux_embedded_hal"]
+linux_embedded_hal = ["linux-embedded-hal", "log",]
 
 # FIXME: This needs further testing before released into the public API.
 # alloc = []
