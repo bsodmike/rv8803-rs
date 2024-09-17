@@ -35,8 +35,8 @@ where
         }
     }
 
-    pub fn bm(&mut self) -> &mut shared_bus::BusManager<SharedBusMutex> {
-        &mut self.bus_manager
+    pub fn bm(self) -> shared_bus::BusManager<SharedBusMutex> {
+        self.bus_manager
     }
 }
 
