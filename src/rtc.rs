@@ -1,143 +1,163 @@
-#[allow(unused_imports)]
-use crate::{driver::Driver, error::DriverTransferError};
-use chrono::{DateTime, Utc};
+use crate::error::DriverError;
+use crate::models::ClockData;
+use crate::rtc::{address::SlaveAddress, registers as ClockRegisters};
 use core::marker::PhantomData;
-#[cfg(feature = "defmt")]
-#[allow(unused_imports)]
-use defmt::error;
-#[allow(unused_imports)]
-use heapless::String;
-use shared_bus::BusManager;
+use embedded_hal::i2c::{I2c, SevenBitAddress};
 
-/// The [`RTClock`] type is the interface for communicating with the `rv8803` rtc clock chip via a shared bus over I2C.
-#[allow(dead_code)]
-pub struct RTClock<'a, I2C, I2cErr, M> {
-    datetime: Option<DateTime<Utc>>,
-    phantom: PhantomData<&'a I2C>,
-    bus_err: PhantomData<&'a I2cErr>,
-    bus: &'a BusManager<M>,
-    device_address: u8,
+pub mod address;
+pub mod reg;
+// pub mod reg_year;
+pub mod registers;
+
+/// Used to fetch latest readings.
+pub mod now;
+/// Used to update the rtc clock.
+pub mod update;
+
+/// Trait to specify addressing mode.
+pub trait AddressingMode {
+    /// The addressing mode.
+    type Mode;
 }
 
-#[allow(dead_code)]
-impl<'a, I2C, I2cErr, SharedBusMutex> RTClock<'a, I2C, I2cErr, SharedBusMutex>
+impl AddressingMode for SevenBitAddress {
+    type Mode = SevenBitAddress;
+}
+
+/// Driver for the `rv8803` rtc chip.
+///
+/// # Registers
+///
+/// Refer Page 15: <https://www.microcrystal.com/fileadmin/Media/Products/RTC/App.Manual/RV-8803-C7_App-Manual.pdf>
+pub struct Driver<I2C, A, Mode> {
+    addr: u8,
+    i2c: I2C,
+    _addr_mode: core::marker::PhantomData<A>,
+    _mode_type: core::marker::PhantomData<Mode>,
+}
+
+impl<I2C, A, M> Driver<I2C, A, M>
 where
-    I2C: embedded_hal_0_2::blocking::i2c::Write<Error = I2cErr>
-        + embedded_hal_0_2::blocking::i2c::WriteRead<Error = I2cErr>,
-    SharedBusMutex: shared_bus::BusMutex,
-    <SharedBusMutex as shared_bus::BusMutex>::Bus: embedded_hal_0_2::blocking::i2c::Write<Error = I2cErr>
-        + embedded_hal_0_2::blocking::i2c::WriteRead<Error = I2cErr>,
-    I2cErr: defmt::Format,
-    DriverTransferError<I2cErr>: From<I2cErr>,
+    I2C: I2c<A::Mode>,
+    I2C::Error: Into<DriverError<I2C::Error>>,
+    A: AddressingMode<Mode = SevenBitAddress> + embedded_hal::i2c::AddressMode,
 {
-    /// Creates a new [`RTClock`].
-    pub fn new(bus: &'a BusManager<SharedBusMutex>, address: &u8) -> Self {
-        Self {
-            datetime: None,
-            bus,
-            phantom: PhantomData,
-            bus_err: PhantomData,
-            device_address: *address,
+    /// Creates a new driver from an I2C peripheral.
+    pub fn new(i2c: I2C) -> Self {
+        Driver {
+            addr: SlaveAddress::Default.into(),
+            i2c,
+            _addr_mode: PhantomData,
+            _mode_type: PhantomData,
         }
     }
 
-    /// Set time on the Driver module
+    /// Change I2C address
+    pub fn set_address(&mut self, addr: SlaveAddress) -> u8 {
+        self.addr = addr.into();
+        self.addr
+    }
+
+    /// release resources
+    pub fn free(self) -> I2C {
+        self.i2c
+    }
+
+    #[allow(dead_code)]
+    fn read_register<T>(&mut self, mut reg: T) -> Result<T, DriverError<I2C::Error>>
+    where
+        T: reg::Read,
+        I2C: I2c<SevenBitAddress>,
+        I2C::Error: Into<DriverError<I2C::Error>>,
+    {
+        reg.read_from_device(&mut self.i2c, self.addr)?;
+        Ok(reg)
+    }
+
+    #[allow(dead_code)]
+    fn write_register<R: reg::Write>(&mut self, reg: R) -> Result<(), DriverError<I2C::Error>> {
+        reg.write_to_device::<I2C, A>(&mut self.i2c, self.addr)?;
+        Ok(())
+    }
+
+    /// Fetch the latest reading from the rtc module.
     ///
     /// # Errors
     ///
-    /// Read/write errors during communication with the `rv8803` chip will return an error.
-    #[allow(clippy::too_many_arguments)]
-    pub fn set_time(
+    /// Returns a [`DriverError`]
+    pub fn now<T>(&mut self, mut clock_data: T) -> Result<ClockData, DriverError<I2C::Error>>
+    where
+        T: crate::rtc::now::Read,
+        I2C: I2c<SevenBitAddress>,
+        I2C::Error: Into<DriverError<I2C::Error>>,
+    {
+        let mut data = crate::prelude::now::new();
+
+        // Associated instance on T, not to be confused with the value data above.
+        clock_data.now(&mut self.i2c, self.addr, &mut data)?;
+
+        Ok(data)
+    }
+
+    /// Update the rtc module.
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`DriverError`]
+    pub fn update<T>(
         &mut self,
-        sec: u8,
-        min: u8,
-        hour: u8,
-        weekday: u8,
-        date: u8,
-        month: u8,
-        year: u16,
-    ) -> Result<bool, DriverTransferError<I2cErr>> {
-        let proxy = self.bus.acquire_i2c();
-        let mut driver = Driver::new(proxy, self.device_address);
+        mut clock_data: T,
+        data: &Option<ClockData>,
+    ) -> Result<T, DriverError<I2C::Error>>
+    where
+        T: crate::rtc::update::Read,
+        I2C: I2c<SevenBitAddress>,
+        I2C::Error: Into<DriverError<I2C::Error>>,
+    {
+        let mut cu = ClockRegisters::new(self.addr);
 
-        match driver.set_time(sec, min, hour, weekday, date, month, year) {
-            Ok(val) => Ok(val),
-            Err(err) => Err(err),
+        if let Some(d) = data {
+            clock_data.set_datetime(&mut self.i2c, self.addr, &mut cu, d)?;
         }
-    }
-
-    /// Fetch time from the RTC clock and store it in the buffer `dest`.
-    ///
-    /// # Errors
-    ///
-    /// Read/write errors during communication with the `rv8803` chip will return an error.
-    pub fn update_time(&mut self, dest: &mut [u8]) -> Result<bool, DriverTransferError<I2cErr>> {
-        let proxy = self.bus.acquire_i2c();
-        let mut driver: Driver<crate::prelude::Bus<'_, shared_bus::I2cProxy<'_, SharedBusMutex>>> =
-            Driver::new(proxy, self.device_address);
-
-        Ok(driver.update_time(dest)?)
+        Ok(clock_data)
     }
 }
 
-/// The [`RTClockDirect`] type is the interface for communicating with the `rv8803` rtc clock chip directly over I2C.
+/// Async Driver for the `rv8803` rtc chip.
+/// *WARNING*: This is in progress, and will be completed in a future release.
 #[allow(dead_code)]
-pub struct RTClockDirect<'a, I2C, I2cErr> {
-    datetime: Option<DateTime<Utc>>,
-    periph: I2C,
-    bus_err: PhantomData<&'a I2cErr>,
-    device_address: u8,
+pub struct DriverAsync<I2C, A, Mode> {
+    addr: u8,
+    i2c: I2C,
+    _addr_mode: core::marker::PhantomData<A>,
+    _mode_type: core::marker::PhantomData<Mode>,
 }
 
-#[allow(dead_code)]
-impl<'a, I2C, I2cErr> RTClockDirect<'a, I2C, I2cErr>
+impl<I2C, A, M> DriverAsync<I2C, A, M>
 where
-    I2C: embedded_hal_0_2::blocking::i2c::Write<Error = I2cErr>
-        + embedded_hal_0_2::blocking::i2c::WriteRead<Error = I2cErr>,
-    DriverTransferError<I2cErr>: From<I2cErr>,
+    I2C: embedded_hal_async::i2c::I2c<A::Mode>,
+    I2C::Error: Into<DriverError<I2C::Error>>,
+    A: AddressingMode<Mode = SevenBitAddress> + embedded_hal_async::i2c::AddressMode,
 {
-    /// Creates a new [`RTClockDirect`].
-    pub fn new(periph: I2C, address: &u8) -> Self {
-        Self {
-            datetime: None,
-            periph,
-            bus_err: PhantomData,
-            device_address: *address,
+    /// Creates a new driver from an I2C peripheral.
+    #[allow(dead_code)]
+    pub fn new(i2c: I2C) -> Self {
+        DriverAsync {
+            addr: SlaveAddress::Default.into(),
+            i2c,
+            _addr_mode: PhantomData,
+            _mode_type: PhantomData,
         }
     }
 
-    /// Set time on the Driver module
+    /// Fetch the year value.
     ///
     /// # Errors
     ///
-    /// Read/write errors during communication with the `rv8803` chip will return an error.
-    #[allow(clippy::too_many_arguments)]
-    pub fn set_time(
-        self,
-        sec: u8,
-        min: u8,
-        hour: u8,
-        weekday: u8,
-        date: u8,
-        month: u8,
-        year: u16,
-    ) -> Result<bool, DriverTransferError<I2cErr>> {
-        let mut driver = Driver::new(self.periph, self.device_address);
+    /// Returns a [`DriverError`]
+    pub async fn get_year(&mut self, buf: u8) -> Result<(), DriverError<I2C::Error>> {
+        self.i2c.write_read(self.addr, &[0x06], &mut [buf]).await?;
 
-        match driver.set_time(sec, min, hour, weekday, date, month, year) {
-            Ok(val) => Ok(val),
-            Err(err) => Err(err),
-        }
-    }
-
-    /// Fetch time from the RTC clock and store it in the buffer `dest`.
-    ///
-    /// # Errors
-    ///
-    /// Read/write errors during communication with the `rv8803` chip will return an error.
-    pub fn update_time(self, dest: &mut [u8]) -> Result<bool, DriverTransferError<I2cErr>> {
-        let mut driver = Driver::new(self.periph, self.device_address);
-
-        Ok(driver.update_time(dest)?)
+        Ok(())
     }
 }

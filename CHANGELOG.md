@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [4.0.0] - XX Sept 2024
 
 ### Changed
-- __Breaking Change__: Rewamped blocking I2C with `embedded-hal` v0.2; Testing on hardware pending.
+- __Breaking Change__: New public API based on `embedded-hal-async`.
 
 ## [3.0.0] - 15 Sept 2024 - Yanked
 
@@ -29,14 +29,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tested (compilation/clippy) with Embassy and `defmt`.
 - TODO: Testing on actual hardware.
 
-## [0.4.4] - 1 March 2024
+## [0.4.4] - 1 March 2024 - Yanked
 
 ### Changed
 - __Breaking Change__: Fully revised module organisation
 - __Breaking Change__: Revised error API
 - Renamed `Rv8803<_>::from_i2c0` to `Rv8803<_>::from_i2c`.
 
-## [0.1.0] - 1 January 2022
+## [0.1.0] - 1 January 2022 - Yanked
 - Initial release
 
 
