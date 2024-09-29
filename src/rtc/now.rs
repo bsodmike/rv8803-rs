@@ -46,7 +46,7 @@ impl Read for ClockData {
         let mut cregs = super::registers::new(addr);
 
         let latest = ClockData {
-            hundreths: bcd_to_dec(
+            hundredths: bcd_to_dec(
                 cregs.read_register(i2c, super::registers::Register::Hundredths)?,
             ),
             seconds: bcd_to_dec(cregs.read_register(i2c, super::registers::Register::Seconds)?),

@@ -1,8 +1,8 @@
 /// Holds the clock data.
 #[derive(Debug, Copy, Clone, Default)]
 pub struct ClockData {
-    /// Hundreths.
-    pub hundreths: u8,
+    /// Hundredths.
+    pub hundredths: u8,
     /// Seconds.
     pub seconds: u8,
     /// Minutes.
@@ -20,10 +20,10 @@ pub struct ClockData {
 }
 
 impl ClockData {
-    /// Hundreths.
+    /// Hundredths.
     #[must_use]
-    pub fn hundreths(&self) -> u8 {
-        self.hundreths
+    pub fn hundredths(&self) -> u8 {
+        self.hundredths
     }
 
     /// Seconds.
@@ -68,11 +68,11 @@ impl ClockData {
         self.year
     }
 
-    /// Set the date and time.  Hundreths is set to 0.
+    /// Set the date and time.  Hundredths is set to 0.
     pub fn set(&mut self, value: (u8, u8, u8, Weekday, u8, Month, u8)) {
         let (hours, minutes, seconds, weekday, day, month, year) = value;
 
-        self.hundreths = 0;
+        self.hundredths = 0;
         self.hours = hours;
         self.minutes = minutes;
         self.seconds = seconds;

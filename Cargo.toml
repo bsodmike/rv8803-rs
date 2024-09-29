@@ -2,13 +2,14 @@
 name = "rv8803"
 version = "4.0.0"
 authors = ["Michael de Silva <michael@cyberdynea.io>"]
-edition = "2021"
 repository = "https://github.com/bsodmike/rv8803-rs"
 license = "MIT"
 description = "RTC clock driver for the rv8803 chip via I2C"
 readme = "README.md"
 keywords = ["i2c", "driver", "embedded-hal-driver", "rv8803"]
 categories = ["embedded", "hardware-support", "no-std"]
+edition = "2021"
+rust-version = "1.83.0"
 publish = false
 
 [features]

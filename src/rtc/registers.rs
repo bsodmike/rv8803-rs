@@ -12,7 +12,7 @@ pub enum Register {
     MinutesAlarm = 0x08,
     /// HoursAlarm
     HoursAlarm = 0x09,
-    /// Hundreths
+    /// Hundredths
     Hundredths = 0x10,
     /// Seconds
     Seconds = 0x11,

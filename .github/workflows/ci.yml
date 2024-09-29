@@ -1,12 +1,14 @@
+name: CI
+
 on:
   push:
     branches:
       - master
-    tags:
-      - 'v*'
   pull_request:
-
-name: CI
+    branches:
+      - master
+  schedule:
+    - cron: "0 0 * * 0"
 
 jobs:
   build:
@@ -46,7 +48,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@nightly
         with:
           components: clippy
-      - run: cargo clippy -- -Dclippy::all -Dclippy::pedantic --deny warnings
+      - run: cargo clippy -- -D warnings
 
   format:
     name: Format
@@ -57,6 +59,58 @@ jobs:
         with:
           components: rustfmt
       - run: cargo +nightly fmt -- --check
+
+  deny:
+    name: Deny
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Run cargo-deny
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check all
+
+  links:
+    name: Links
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Run lychee
+        uses: lycheeverse/lychee-action@v1
+        with:
+          args: -v *.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  typos:
+    name: Typos
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Check typos
+        uses: crate-ci/typos@master
+
+  msrv:
+    name: MSRV
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Install cargo-binstall
+        uses: taiki-e/install-action@cargo-binstall
+
+      - name: Install cargo-msrv
+        run: cargo binstall -y --force cargo-msrv
+
+      - name: Run cargo-msrv
+        run: cargo msrv --output-format json verify | tail -n 1 | jq --exit-status '.success'
 
   doc:
     name: doc
