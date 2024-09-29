@@ -5,8 +5,6 @@ use core::marker::PhantomData;
 use embedded_hal::i2c::{I2c, SevenBitAddress};
 
 pub mod address;
-pub mod reg;
-// pub mod reg_year;
 pub mod registers;
 
 /// Used to fetch latest readings.
@@ -29,14 +27,13 @@ impl AddressingMode for SevenBitAddress {
 /// # Registers
 ///
 /// Refer Page 15: <https://www.microcrystal.com/fileadmin/Media/Products/RTC/App.Manual/RV-8803-C7_App-Manual.pdf>
-pub struct Driver<I2C, A, Mode> {
+pub struct Driver<I2C, A> {
     addr: u8,
     i2c: I2C,
     _addr_mode: core::marker::PhantomData<A>,
-    _mode_type: core::marker::PhantomData<Mode>,
 }
 
-impl<I2C, A, M> Driver<I2C, A, M>
+impl<I2C, A> Driver<I2C, A>
 where
     I2C: I2c<A::Mode>,
     I2C::Error: Into<DriverError<I2C::Error>>,
@@ -48,7 +45,6 @@ where
             addr: SlaveAddress::Default.into(),
             i2c,
             _addr_mode: PhantomData,
-            _mode_type: PhantomData,
         }
     }
 
@@ -61,23 +57,6 @@ where
     /// release resources
     pub fn free(self) -> I2C {
         self.i2c
-    }
-
-    #[allow(dead_code)]
-    fn read_register<T>(&mut self, mut reg: T) -> Result<T, DriverError<I2C::Error>>
-    where
-        T: reg::Read,
-        I2C: I2c<SevenBitAddress>,
-        I2C::Error: Into<DriverError<I2C::Error>>,
-    {
-        reg.read_from_device(&mut self.i2c, self.addr)?;
-        Ok(reg)
-    }
-
-    #[allow(dead_code)]
-    fn write_register<R: reg::Write>(&mut self, reg: R) -> Result<(), DriverError<I2C::Error>> {
-        reg.write_to_device::<I2C, A>(&mut self.i2c, self.addr)?;
-        Ok(())
     }
 
     /// Fetch the latest reading from the rtc module.
@@ -126,14 +105,13 @@ where
 /// Async Driver for the `rv8803` rtc chip.
 /// *WARNING*: This is in progress, and will be completed in a future release.
 #[allow(dead_code)]
-pub struct DriverAsync<I2C, A, Mode> {
+pub struct DriverAsync<I2C, A> {
     addr: u8,
     i2c: I2C,
     _addr_mode: core::marker::PhantomData<A>,
-    _mode_type: core::marker::PhantomData<Mode>,
 }
 
-impl<I2C, A, M> DriverAsync<I2C, A, M>
+impl<I2C, A> DriverAsync<I2C, A>
 where
     I2C: embedded_hal_async::i2c::I2c<A::Mode>,
     I2C::Error: Into<DriverError<I2C::Error>>,
@@ -146,7 +124,6 @@ where
             addr: SlaveAddress::Default.into(),
             i2c,
             _addr_mode: PhantomData,
-            _mode_type: PhantomData,
         }
     }
 

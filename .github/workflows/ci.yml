@@ -22,6 +22,7 @@ jobs:
           - "thumbv6m-none-eabi"
           - "thumbv7em-none-eabi"
         toolchain:
+          - "stable"
           - "nightly"
     steps:
       - uses: actions/checkout@v4
@@ -29,6 +30,7 @@ jobs:
         with:
           toolchain: ${{ matrix.toolchain }}
           target: ${{ matrix.target }}
+      - run: rustup target add ${{ matrix.target }}
       - run: cargo build --target ${{ matrix.target }}
 
   test:

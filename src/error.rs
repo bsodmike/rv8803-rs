@@ -20,8 +20,6 @@ impl core::error::Error for Error {
     fn cause(&self) -> Option<&dyn core::error::Error> {
         self.source()
     }
-
-    fn provide<'a>(&'a self, _request: &mut core::error::Request<'a>) {}
 }
 
 /// Driver error.

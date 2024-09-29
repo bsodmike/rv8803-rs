@@ -9,7 +9,7 @@ readme = "README.md"
 keywords = ["i2c", "driver", "embedded-hal-driver", "rv8803"]
 categories = ["embedded", "hardware-support", "no-std"]
 edition = "2021"
-rust-version = "1.83.0"
+rust-version = "1.81.0"
 publish = false
 
 [features]

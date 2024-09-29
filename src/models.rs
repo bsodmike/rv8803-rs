@@ -102,7 +102,7 @@ pub enum Weekday {
     Saturday = 64,
 }
 
-/// FIXME this causes [defmt] to get stuck. Why?
+// FIXME this causes [defmt] to get stuck. Why?
 // impl From<u8> for Weekday {
 //     fn from(value: u8) -> Self {
 //         Self::into(value.into())

@@ -1,12 +1,9 @@
 //! RTC clock driver for the `rv8803` chip over I2C.
 #![no_std]
 #![forbid(unsafe_code)]
-#![warn(missing_docs)]
-#![warn(dead_code)]
-// #![deny(unused_imports)]
+#![warn(missing_docs, dead_code, clippy::unwrap_used)]
 #![cfg_attr(docsrs, feature(doc_cfg), feature(doc_auto_cfg))]
-#![feature(error_generic_member_access)]
-#![feature(trivial_bounds)]
+// #![deny(unused_imports)]
 
 pub use crate::models::ClockData;
 pub use crate::rtc::Driver;

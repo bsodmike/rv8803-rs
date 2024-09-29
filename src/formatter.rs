@@ -13,7 +13,7 @@ impl<'a> ByteMutWriter<'a> {
     }
 
     pub fn as_str(&self) -> &str {
-        str::from_utf8(&self.buf[0..self.cursor]).unwrap()
+        str::from_utf8(&self.buf[0..self.cursor]).expect("Unable to create &str from buf")
     }
 
     #[inline]
@@ -41,12 +41,13 @@ impl<'a> ByteMutWriter<'a> {
 impl fmt::Write for ByteMutWriter<'_> {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         let cap = self.capacity();
-        for (i, &b) in self.buf[self.cursor..cap]
+        self.buf[self.cursor..cap]
             .iter_mut()
             .zip(s.as_bytes().iter())
-        {
-            *i = b;
-        }
+            .for_each(|(i, &b)| {
+                *i = b;
+            });
+
         self.cursor = usize::min(cap, self.cursor + s.as_bytes().len());
         Ok(())
     }
