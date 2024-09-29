@@ -4,18 +4,7 @@ use embedded_hal::i2c::{I2c, SevenBitAddress};
 
 use super::registers::ClockRegisters;
 
-/// Clock updater.
-#[derive(Debug, Copy, Clone, Default)]
-pub struct ClockUpdater;
-
-/// Creates a [`ClockUpdater`].
-#[must_use]
-pub fn new() -> ClockUpdater {
-    ClockUpdater {}
-}
-
-/// Trait to read from I2C periph
-pub trait Read: Debug + Copy + Clone {
+pub trait Updatable: Debug + Copy + Clone {
     /// Set the date and time.
     ///
     /// # Errors
@@ -25,7 +14,7 @@ pub trait Read: Debug + Copy + Clone {
         &mut self,
         i2c: &mut I2C,
         addr: u8,
-        cu: &mut ClockRegisters,
+        cr: &mut ClockRegisters,
         data: &ClockData,
     ) -> Result<(), DriverError<I2C::Error>>
     where
@@ -33,7 +22,7 @@ pub trait Read: Debug + Copy + Clone {
         I2C::Error: Into<DriverError<I2C::Error>>;
 }
 
-impl Read for ClockUpdater {
+impl Updatable for ClockData {
     fn set_datetime<I2C>(
         &mut self,
         i2c: &mut I2C,

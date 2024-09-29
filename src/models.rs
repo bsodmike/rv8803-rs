@@ -20,6 +20,14 @@ pub struct ClockData {
 }
 
 impl ClockData {
+    /// Creates a [`ClockData`].
+    #[must_use]
+    pub fn new() -> ClockData {
+        ClockData {
+            ..Default::default()
+        }
+    }
+
     /// Hundredths.
     #[must_use]
     pub fn hundredths(&self) -> u8 {

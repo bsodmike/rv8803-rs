@@ -20,7 +20,5 @@ pub mod prelude {
     pub use crate::error::DriverError;
     pub use crate::models::{Month, Weekday};
     pub use crate::rtc::address::SlaveAddress;
-    pub use crate::rtc::now;
-    pub use crate::rtc::update::{self, ClockUpdater};
     pub use crate::rtc::AddressingMode;
 }

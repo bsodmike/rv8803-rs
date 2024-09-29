@@ -4,16 +4,8 @@ use crate::{error::DriverError, models::Month, models::Weekday};
 use core::fmt::{Debug, Write};
 use embedded_hal::i2c::{I2c, SevenBitAddress};
 
-/// Creates a [`ClockData`].
-#[must_use]
-pub fn new() -> ClockData {
-    ClockData {
-        ..Default::default()
-    }
-}
-
 /// Trait to read from I2C periph
-pub trait Read: Debug + Copy + Clone {
+pub trait Readable: Debug + Copy + Clone {
     /// Fetch the latest date and time.
     ///
     /// # Errors
@@ -30,7 +22,7 @@ pub trait Read: Debug + Copy + Clone {
         I2C::Error: Into<DriverError<I2C::Error>>;
 }
 
-impl Read for ClockData {
+impl Readable for ClockData {
     fn now<I2C>(
         &mut self,
         i2c: &mut I2C,

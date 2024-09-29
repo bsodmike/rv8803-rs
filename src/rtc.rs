@@ -64,16 +64,19 @@ where
     /// # Errors
     ///
     /// Returns a [`DriverError`]
-    pub fn now<T>(&mut self, mut clock_data: T) -> Result<ClockData, DriverError<I2C::Error>>
+    pub fn now(
+        &mut self,
+        mut rtc_chip: impl crate::rtc::now::Readable,
+    ) -> Result<ClockData, DriverError<I2C::Error>>
     where
-        T: crate::rtc::now::Read,
+        // T: crate::rtc::now::Read,
         I2C: I2c<SevenBitAddress>,
         I2C::Error: Into<DriverError<I2C::Error>>,
     {
-        let mut data = crate::prelude::now::new();
+        let mut data = crate::models::ClockData::new();
 
         // Associated instance on T, not to be confused with the value data above.
-        clock_data.now(&mut self.i2c, self.addr, &mut data)?;
+        rtc_chip.now(&mut self.i2c, self.addr, &mut data)?;
 
         Ok(data)
     }
@@ -83,22 +86,21 @@ where
     /// # Errors
     ///
     /// Returns a [`DriverError`]
-    pub fn update<T>(
+    pub fn update(
         &mut self,
-        mut clock_data: T,
+        mut rtc_chip: impl crate::rtc::update::Updatable,
         data: &Option<ClockData>,
-    ) -> Result<T, DriverError<I2C::Error>>
+    ) -> Result<impl crate::rtc::update::Updatable, DriverError<I2C::Error>>
     where
-        T: crate::rtc::update::Read,
         I2C: I2c<SevenBitAddress>,
         I2C::Error: Into<DriverError<I2C::Error>>,
     {
         let mut cu = ClockRegisters::new(self.addr);
 
         if let Some(d) = data {
-            clock_data.set_datetime(&mut self.i2c, self.addr, &mut cu, d)?;
+            rtc_chip.set_datetime(&mut self.i2c, self.addr, &mut cu, d)?;
         }
-        Ok(clock_data)
+        Ok(rtc_chip)
     }
 }
 
