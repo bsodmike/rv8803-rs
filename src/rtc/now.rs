@@ -1,7 +1,6 @@
-use crate::formatter::ByteMutWriter;
-use crate::models::{ClockData, Year};
-use crate::{error::DriverError, models::Month, models::Weekday};
-use core::fmt::{Debug, Write};
+use crate::error::DriverError;
+use crate::models::ClockData;
+use core::fmt::Debug;
 use embedded_hal::i2c::{I2c, SevenBitAddress};
 
 /// Trait to read from I2C periph
@@ -50,69 +49,10 @@ impl Readable for ClockData {
 
             // Read directly as a byte.
             weekday: cregs.read_register(i2c, super::registers::Register::Weekday)?,
-
-            ..Default::default()
         };
 
         *data = latest;
 
         Ok(())
-    }
-}
-
-fn left_pad<'a>(buf: &'a mut ByteMutWriter<'_>, value: u8) -> &'a str {
-    buf.clear();
-    write!(buf, "{}{}", if value < 10 { "0" } else { "" }, value).unwrap();
-
-    buf.as_str()
-}
-
-fn pad_year<'a>(buf: &'a mut ByteMutWriter<'_>, value: u8, century: Year) -> &'a str {
-    buf.clear();
-
-    match century {
-        Year::TwentiethCentury(_) => write!(buf, "19{}", value).unwrap(),
-        Year::TwentyFirstCentury(_) => write!(buf, "20{}", value).unwrap(),
-    }
-
-    buf.as_str()
-}
-
-impl defmt::Format for ClockData {
-    fn format(&self, fmt: defmt::Formatter) {
-        let mut buf = [0u8; 2];
-        let mut buf = ByteMutWriter::new(&mut buf[..]);
-        let hours = left_pad(&mut buf, self.hours);
-
-        let mut buf = [0u8; 2];
-        let mut buf = ByteMutWriter::new(&mut buf[..]);
-        let minutes = left_pad(&mut buf, self.minutes);
-
-        let mut buf = [0u8; 2];
-        let mut buf = ByteMutWriter::new(&mut buf[..]);
-        let seconds = left_pad(&mut buf, self.seconds);
-
-        let mut buf = [0u8; 2];
-        let mut buf = ByteMutWriter::new(&mut buf[..]);
-        let day = left_pad(&mut buf, self.date);
-
-        let month = Month::from(self.month);
-        let weekday = Weekday::from(self.weekday);
-
-        let mut buf = [0u8; 4];
-        let mut buf = ByteMutWriter::new(&mut buf[..]);
-        let year = pad_year(&mut buf, self.year, self.century);
-
-        defmt::write!(
-            fmt,
-            "{}:{}:{}, {}, {} {} {}",
-            hours,
-            minutes,
-            seconds,
-            weekday,
-            day,
-            month,
-            year,
-        );
     }
 }

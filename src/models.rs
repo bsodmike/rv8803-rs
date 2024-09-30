@@ -1,3 +1,6 @@
+use crate::{formatter::ByteMutWriter, log::LoggableClockData};
+use core::fmt::{Debug, Write};
+
 /// Holds the clock data.
 #[derive(Debug, Copy, Clone, Default)]
 pub struct ClockData {
@@ -17,8 +20,6 @@ pub struct ClockData {
     pub month: u8,
     /// Year.
     pub year: u8,
-    /// Current century
-    pub century: Year,
 }
 
 impl ClockData {
@@ -79,7 +80,7 @@ impl ClockData {
     }
 
     /// Set the date and time.  Hundredths is set to 0.
-    pub fn set(&mut self, value: (u8, u8, u8, Weekday, u8, Month, u8)) {
+    pub fn set(&mut self, value: (u8, u8, u8, Weekday, u8, Month, CurrentYear)) {
         let (hours, minutes, seconds, weekday, day, month, year) = value;
 
         self.hundredths = 0;
@@ -89,12 +90,66 @@ impl ClockData {
         self.weekday = weekday as u8;
         self.date = day;
         self.month = month as u8;
-        self.year = year;
+        self.year = year.0;
     }
+}
 
-    /// Set the century. This is mainly used for presentational purposes.
-    pub fn set_century(&mut self, value: Year) {
-        self.century = value
+/// Creates a tuple to hold the current year.
+pub struct CurrentYear(u8);
+
+impl CurrentYear {
+    /// Provides the current year as a [`u8`].
+    pub fn new(value: u16) -> Self {
+        if value < 1970 {
+            panic!("Year must be greater than 1970");
+        }
+
+        if value < 2000 {
+            Self((value - 1900) as u8)
+        } else {
+            Self((value - 2000) as u8)
+        }
+    }
+}
+
+impl defmt::Format for LoggableClockData {
+    fn format(&self, fmt: defmt::Formatter) {
+        let data = self.data();
+
+        let mut buf = [0u8; 2];
+        let mut buf = ByteMutWriter::new(&mut buf[..]);
+        let hours = left_pad(&mut buf, data.hours);
+
+        let mut buf = [0u8; 2];
+        let mut buf = ByteMutWriter::new(&mut buf[..]);
+        let minutes = left_pad(&mut buf, data.minutes);
+
+        let mut buf = [0u8; 2];
+        let mut buf = ByteMutWriter::new(&mut buf[..]);
+        let seconds = left_pad(&mut buf, data.seconds);
+
+        let mut buf = [0u8; 2];
+        let mut buf = ByteMutWriter::new(&mut buf[..]);
+        let day = left_pad(&mut buf, data.date);
+
+        let month = Month::from(data.month);
+        let weekday = Weekday::from(data.weekday);
+
+        let mut buf = [0u8; 4];
+        let mut buf = ByteMutWriter::new(&mut buf[..]);
+        let year = pad_year(&mut buf, data.year, self.century());
+
+        defmt::write!(
+            fmt,
+            "{}:{}:{}, {}, {} {} {}",
+            hours,
+            minutes,
+            seconds,
+            weekday,
+            day,
+            month,
+            year,
+        );
     }
 }
 
@@ -240,7 +295,9 @@ impl defmt::Format for Month {
 #[derive(Debug, Copy, Clone)]
 #[allow(dead_code)]
 pub enum Year {
+    /// 20th Century Fox. Definitely, better times.
     TwentiethCentury(u8),
+    /// Reality.
     TwentyFirstCentury(u8),
 }
 
@@ -250,11 +307,31 @@ impl Default for Year {
     }
 }
 
-// impl Year {
-//     pub from() -> Self{
+fn left_pad<'a>(buf: &'a mut ByteMutWriter<'_>, value: u8) -> &'a str {
+    buf.clear();
+    write!(buf, "{}{}", common_padding(value), value).unwrap();
 
-//     }
-// }
+    buf.as_str()
+}
+
+fn pad_year<'a>(buf: &'a mut ByteMutWriter<'_>, value: u8, century: Year) -> &'a str {
+    buf.clear();
+
+    match century {
+        Year::TwentiethCentury(_) => write!(buf, "19{}{}", common_padding(value), value).unwrap(),
+        Year::TwentyFirstCentury(_) => write!(buf, "20{}{}", common_padding(value), value).unwrap(),
+    }
+
+    buf.as_str()
+}
+
+fn common_padding<'a>(value: u8) -> &'a str {
+    if value < 10 {
+        "0"
+    } else {
+        ""
+    }
+}
 
 #[allow(dead_code)]
 pub mod misc {
