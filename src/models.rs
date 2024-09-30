@@ -17,6 +17,8 @@ pub struct ClockData {
     pub month: u8,
     /// Year.
     pub year: u8,
+    /// Current century
+    pub century: Year,
 }
 
 impl ClockData {
@@ -88,6 +90,11 @@ impl ClockData {
         self.date = day;
         self.month = month as u8;
         self.year = year;
+    }
+
+    /// Set the century. This is mainly used for presentational purposes.
+    pub fn set_century(&mut self, value: Year) {
+        self.century = value
     }
 }
 
@@ -228,6 +235,26 @@ impl defmt::Format for Month {
         );
     }
 }
+
+/// Enumerated type values for the year.
+#[derive(Debug, Copy, Clone)]
+#[allow(dead_code)]
+pub enum Year {
+    TwentiethCentury(u8),
+    TwentyFirstCentury(u8),
+}
+
+impl Default for Year {
+    fn default() -> Self {
+        Self::TwentyFirstCentury(20)
+    }
+}
+
+// impl Year {
+//     pub from() -> Self{
+
+//     }
+// }
 
 #[allow(dead_code)]
 pub mod misc {

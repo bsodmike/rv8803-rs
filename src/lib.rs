@@ -18,7 +18,7 @@ pub(crate) mod rtc;
 /// Re-exports
 pub mod prelude {
     pub use crate::error::DriverError;
-    pub use crate::models::{Month, Weekday};
+    pub use crate::models::{Month, Weekday, Year};
     pub use crate::rtc::address::SlaveAddress;
     pub use crate::rtc::AddressingMode;
 }
