@@ -40,7 +40,7 @@ impl Updatable for ClockData {
         cu.write_register(i2c, Register::Hours, dec_to_bcd(data.hours()))?;
         cu.write_register(i2c, Register::Minutes, dec_to_bcd(data.minutes()))?;
         cu.write_register(i2c, Register::Seconds, dec_to_bcd(data.seconds()))?;
-        cu.write_register(i2c, Register::Date, dec_to_bcd(data.day()))?;
+        cu.write_register(i2c, Register::Date, dec_to_bcd(data.date()))?;
         cu.write_register(i2c, Register::Month, dec_to_bcd(data.month()))?;
         cu.write_register(i2c, Register::Year, dec_to_bcd(data.year()))?;
 

@@ -20,7 +20,7 @@ pub(crate) mod rtc;
 pub mod prelude {
     pub use crate::error::DriverError;
     pub use crate::log::LoggableClockData;
-    pub use crate::models::{CurrentYear, Month, Weekday, Year};
+    pub use crate::models::{CurrentYear, DateTimeBuilder, Month, Weekday, Year};
     pub use crate::rtc::address::SlaveAddress;
     pub use crate::rtc::AddressingMode;
 }

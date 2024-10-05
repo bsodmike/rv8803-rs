@@ -63,7 +63,7 @@ impl ClockData {
 
     /// Day. The rtc module refers to this as "date".
     #[must_use]
-    pub fn day(&self) -> u8 {
+    pub fn date(&self) -> u8 {
         self.date
     }
 
@@ -80,7 +80,11 @@ impl ClockData {
     }
 
     /// Set the date and time.  Hundredths is set to 0.
-    pub fn set(&mut self, value: (u8, u8, u8, Weekday, u8, Month, CurrentYear)) {
+    pub fn set(&mut self, value: &ClockData) {
+        *self = *value;
+    }
+
+    fn _set(&mut self, value: (u8, u8, u8, Weekday, u8, Month, CurrentYear)) {
         let (hours, minutes, seconds, weekday, day, month, year) = value;
 
         self.hundredths = 0;
@@ -95,6 +99,7 @@ impl ClockData {
 }
 
 /// Creates a tuple to hold the current year.
+#[derive(Debug, Default)]
 pub struct CurrentYear(u8);
 
 impl CurrentYear {
@@ -154,8 +159,10 @@ impl defmt::Format for LoggableClockData {
 }
 
 /// Enumerated type values for the weekday register.
+#[derive(Debug, Default)]
 #[allow(dead_code)]
 pub enum Weekday {
+    #[default]
     /// Sunday
     Sunday = 1,
     /// Monday
@@ -217,7 +224,9 @@ impl defmt::Format for Weekday {
 
 /// Enumerated type values for the month register.
 #[allow(dead_code)]
+#[derive(Debug, Default)]
 pub enum Month {
+    #[default]
     /// January
     January = 1,
     /// February
@@ -304,6 +313,100 @@ pub enum Year {
 impl Default for Year {
     fn default() -> Self {
         Self::TwentyFirstCentury(20)
+    }
+}
+
+/// Creates a [`DateTimeBuilder`] to set the time.
+#[derive(Debug, Default)]
+pub struct DateTimeBuilder {
+    hours: u8,
+    minutes: u8,
+    seconds: u8,
+    date: u8,
+    weekday: Weekday,
+    month: Month,
+    year: CurrentYear,
+}
+
+impl DateTimeBuilder {
+    /// Creates a new [`DateTimeBuilder`], defaulting to the UNIX epoch.
+    #[must_use]
+    pub fn new() -> Self {
+        Self {
+            hours: 0,
+            minutes: 0,
+            seconds: 0,
+            date: 1,
+            weekday: Weekday::Thursday,
+            month: Month::January,
+            year: CurrentYear::new(1970),
+        }
+    }
+
+    /// Set the hours.
+    #[must_use]
+    pub fn hours(mut self, value: u8) -> Self {
+        self.hours = value;
+        self
+    }
+
+    /// Set the minutes.
+    #[must_use]
+    pub fn minutes(mut self, value: u8) -> Self {
+        self.minutes = value;
+        self
+    }
+
+    /// Set the seconds.
+    #[must_use]
+    pub fn seconds(mut self, value: u8) -> Self {
+        self.seconds = value;
+        self
+    }
+
+    /// Set the date.
+    #[must_use]
+    pub fn date(mut self, value: u8) -> Self {
+        self.date = value;
+        self
+    }
+
+    /// Set the weekday.
+    #[must_use]
+    pub fn weekday(mut self, value: Weekday) -> Self {
+        self.weekday = value;
+        self
+    }
+
+    /// Set the month.
+    #[must_use]
+    pub fn month(mut self, value: Month) -> Self {
+        self.month = value;
+        self
+    }
+
+    /// Set the year.
+    #[must_use]
+    pub fn year(mut self, value: CurrentYear) -> Self {
+        self.year = value;
+        self
+    }
+
+    /// Build the time.
+    #[must_use]
+    pub fn build(self) -> ClockData {
+        let mut data = ClockData::new();
+        data._set((
+            self.hours,
+            self.minutes,
+            self.seconds,
+            self.weekday,
+            self.date,
+            self.month,
+            self.year,
+        ));
+
+        data
     }
 }
 
