@@ -1,12 +1,14 @@
+name: CI
+
 on:
   push:
     branches:
       - master
-    tags:
-      - 'v*'
   pull_request:
-
-name: CI
+    branches:
+      - master
+  schedule:
+    - cron: "0 0 * * 0"
 
 jobs:
   build:
@@ -20,6 +22,7 @@ jobs:
           - "thumbv6m-none-eabi"
           - "thumbv7em-none-eabi"
         toolchain:
+          - "stable"
           - "nightly"
     steps:
       - uses: actions/checkout@v4
@@ -27,9 +30,8 @@ jobs:
         with:
           toolchain: ${{ matrix.toolchain }}
           target: ${{ matrix.target }}
+      - run: rustup target add ${{ matrix.target }}
       - run: cargo build --target ${{ matrix.target }}
-      - run: cargo build --target ${{ matrix.target }} --features linux_embedded_hal
-        if: ${{ matrix.target == 'x86_64-unknown-linux-gnu' }}
 
   test:
     name: Unit Tests
@@ -38,7 +40,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly
-      - run: cargo test --all-features
+      - run: cargo test
 
   clippy:
     name: Clippy
@@ -48,7 +50,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@nightly
         with:
           components: clippy
-      - run: cargo clippy --all-features --all-targets -- --deny warnings
+      - run: cargo clippy -- -D warnings
 
   format:
     name: Format
@@ -60,6 +62,58 @@ jobs:
           components: rustfmt
       - run: cargo +nightly fmt -- --check
 
+  deny:
+    name: Deny
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Run cargo-deny
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check all
+
+  links:
+    name: Links
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Run lychee
+        uses: lycheeverse/lychee-action@v1
+        with:
+          args: -v *.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  typos:
+    name: Typos
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Check typos
+        uses: crate-ci/typos@master
+
+  msrv:
+    name: MSRV
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Install cargo-binstall
+        uses: taiki-e/install-action@cargo-binstall
+
+      - name: Install cargo-msrv
+        run: cargo binstall -y --force cargo-msrv
+
+      - name: Run cargo-msrv
+        run: cargo msrv --output-format json verify | tail -n 1 | jq --exit-status '.success'
+
   doc:
     name: doc
     runs-on: ubuntu-latest
@@ -67,7 +121,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly
-      - run: cargo +nightly rustdoc --all-features
+      - run: cargo +nightly rustdoc
+
+  examples:
+    name: Examples
+    runs-on: ubuntu-latest
+    env: {"RUSTFLAGS": "-D warnings"}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+      - run: cargo build --examples
 
   crates_io_publish:
     name: Publish (crates.io)
@@ -77,6 +140,7 @@ jobs:
       - test
       - clippy
       - format
+      - examples
       - doc
     runs-on: ubuntu-latest
     timeout-minutes: 25
