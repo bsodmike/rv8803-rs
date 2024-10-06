@@ -6,10 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [4.0.0] - XX Sept 2024
+## [4.0.0] - 06 October 2024
 
 ### Changed
-- __Breaking Change__: New public API based on `embedded-hal-async`.
+- __Breaking Change__: New public API.
+
+This release has been tested on:
+- Raspberry Pi Pico (RP2040)
+- RAKwireless RAK3172 (STM32wle5cc)
 
 ## [3.0.0] - 15 Sept 2024 - Yanked
 
