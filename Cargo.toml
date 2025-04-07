@@ -15,7 +15,7 @@ rust-version = "1.81.0"
 default = []
 
 [dependencies]
-defmt = { version = "^0.3" }
+defmt = { version = "^1.0" }
 embedded-hal = { package = "embedded-hal", version = "^1.0" }
 embedded-hal-async = "1.0.0"
 
